@@ -13,7 +13,7 @@ export async function getGoogleSheet(sheetId) {
     }
 
     const serviceAccount = JSON.parse(accountJson);
-    const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const privateKey = process.env.GOOGLE_PRIVATE_KEY?.trim().replace(/\\n/g, '\n');
 
     if (!privateKey) {
         throw new Error('Falta la variable GOOGLE_PRIVATE_KEY en Vercel.');
