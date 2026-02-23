@@ -10,7 +10,9 @@ export default async function handler(req, res) {
 
     try {
         const doc = await getGoogleSheet(sheetId);
-        const sheet = doc.sheetsByTitle['usuarios'];
+        const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'usuarios');
+        if (!sheet) return res.status(500).json({ error: 'No se encontró la hoja "usuarios".' });
+
         const rows = await sheet.getRows();
 
         for (const row of rows) {

@@ -127,7 +127,7 @@ export default async function handler(req, res) {
 
 async function getBaseClaveData(doc) {
     const map = {};
-    const sheet = doc.sheetsByTitle['base clave'] || doc.sheetsByTitle['Base clave'];
+    const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'base clave');
     if (!sheet) return map;
 
     const rows = await sheet.getRows();
@@ -146,7 +146,7 @@ async function getBaseClaveData(doc) {
 
 async function getCreditPerformanceData(doc) {
     const maps = { general: {}, jd: {} };
-    const sheet = doc.sheetsByTitle['Credit Performance'] || doc.sheetsByTitle['credit performance'];
+    const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'credit performance');
     if (!sheet) return maps;
 
     const rows = await sheet.getRows();
@@ -170,7 +170,7 @@ async function getCreditPerformanceData(doc) {
 
 async function getSACData(doc) {
     const map = {};
-    const sheet = doc.sheetsByTitle['SAC'];
+    const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'sac');
     if (!sheet) return map;
 
     const rows = await sheet.getRows();
@@ -189,7 +189,7 @@ async function getSACData(doc) {
 
 async function getDCPData(doc) {
     const map = {};
-    const sheet = doc.sheetsByTitle['DCP'];
+    const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'dcp');
     if (!sheet) return map;
 
     const rows = await sheet.getRows();
