@@ -1,9 +1,16 @@
 import axios from 'axios';
 
 export async function getMetabaseToken() {
-    const baseUrl = process.env.METABASE_BASE_URL;
+    let baseUrl = process.env.METABASE_BASE_URL;
     const username = process.env.METABASE_USERNAME;
     const password = process.env.METABASE_PASSWORD;
+
+    if (!baseUrl) throw new Error('Falta la variable METABASE_BASE_URL en Vercel.');
+    if (!username || !password) throw new Error('Faltan las credenciales de Metabase en Vercel.');
+
+    // Asegurar que sea una URL absoluta y quitar barra final si existe
+    if (!baseUrl.startsWith('http')) baseUrl = 'https://' + baseUrl;
+    baseUrl = baseUrl.replace(/\/$/, '');
 
     const response = await axios.post(`${baseUrl}/api/session`, {
         username,
@@ -14,7 +21,9 @@ export async function getMetabaseToken() {
 }
 
 export async function queryMetabase(token, questionId, userId) {
-    const baseUrl = process.env.METABASE_BASE_URL;
+    let baseUrl = process.env.METABASE_BASE_URL;
+    if (!baseUrl.startsWith('http')) baseUrl = 'https://' + baseUrl;
+    baseUrl = baseUrl.replace(/\/$/, '');
 
     // First get the card info to get the raw query
     const cardResponse = await axios.get(`${baseUrl}/api/card/${questionId}`, {
