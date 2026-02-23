@@ -144,7 +144,7 @@ async function getBaseClaveData(doc) {
     const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'base clave');
     if (!sheet) return map;
 
-    const rowCount = Math.min(sheet.rowCount, 10000);
+    const rowCount = Math.min(sheet.rowCount, 5000);
     await sheet.loadCells(`A1:Z${rowCount}`);
 
     let colCuit = 1, colKt = 2, colKv = 3, colPctU = 8;
@@ -181,7 +181,7 @@ async function getCreditPerformanceData(doc) {
     const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'credit performance');
     if (!sheet) return maps;
 
-    const rowCount = Math.min(sheet.rowCount, 10000);
+    const rowCount = Math.min(sheet.rowCount, 5000);
     await sheet.loadCells(`A1:BA${rowCount}`);
 
     let cCuit = 2, fIdx = 33, nIdx = 37, cCuitJD = 45, jdIdx = 46;
@@ -260,9 +260,8 @@ async function getDCPData(doc) {
 
 function formatCuit(val) {
     if (val == null || val === '') return '';
-    // Evitar notación científica y limpiar caracteres no numéricos
-    let s = (typeof val === 'number') ? val.toLocaleString('fullwide', { useGrouping: false }) : String(val);
-    return s.replace(/[^0-9]/g, '');
+    if (typeof val === 'number') return val.toFixed(0);
+    return String(val).replace(/[^0-9]/g, '');
 }
 
 function parseLocaleNum(val) {
