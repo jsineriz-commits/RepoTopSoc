@@ -144,29 +144,28 @@ async function getBaseClaveData(doc) {
     const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'base clave');
     if (!sheet) return map;
 
-    // Cargamos hasta la columna Z y todas las filas
-    const rowCount = Math.min(sheet.rowCount, 5000);
+    const rowCount = Math.min(sheet.rowCount, 10000);
     await sheet.loadCells(`A1:Z${rowCount}`);
 
-    // Encontrar índices con mejores búsquedas y defaults de Código.js
-    let colCuit = -1, colKt = -1, colKv = -1, colPctU = -1;
-    for (let c = 0; c < 26; c++) {
-        const val = String(sheet.getCell(0, c).value || '').toLowerCase().trim();
-        if (val === 'cuit') colCuit = c;
-        if (val === 'kt') colKt = c;
-        if (val === 'kv') colKv = c;
-        if (val === '% u' || val === '%u' || val.includes('utilizacion')) colPctU = c;
+    let colCuit = 1, colKt = 2, colKv = 3, colPctU = 8;
+
+    // Buscar encabezados en las primeras 5 filas para ser más robustos
+    let found = false;
+    for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 26; c++) {
+            const val = String(sheet.getCell(r, c).value || '').toLowerCase().trim();
+            if (val === 'cuit' || val.includes('cuit')) { colCuit = c; found = true; }
+            if (val === 'kt') colKt = c;
+            if (val === 'kv') colKv = c;
+            if (val.startsWith('%') || val.includes('utiliz') || val === '% u' || val === '%u') colPctU = c;
+        }
+        if (found) break; // Si encontramos el CUIT, asumimos que esta es la fila de encabezados
     }
 
-    // Defaults según Código.js (1-based en Excel, 0-based aquí)
-    if (colCuit === -1) colCuit = 1; // Col B
-    if (colKt === -1) colKt = 2;     // Col C
-    if (colKv === -1) colKv = 3;     // Col D
-    if (colPctU === -1) colPctU = 8; // Col I
-
     for (let r = 1; r < rowCount; r++) {
-        const cuitVal = String(sheet.getCell(r, colCuit).value || '').replace(/[^0-9]/g, '');
-        if (cuitVal) {
+        const val = sheet.getCell(r, colCuit).value;
+        const cuitVal = formatCuit(val);
+        if (cuitVal && cuitVal.length > 5) {
             map[cuitVal] = {
                 Kt: sheet.getCell(r, colKt).value || '-',
                 Kv: sheet.getCell(r, colKv).value || '-',
@@ -182,21 +181,36 @@ async function getCreditPerformanceData(doc) {
     const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'credit performance');
     if (!sheet) return maps;
 
-    const rowCount = Math.min(sheet.rowCount, 5000);
-    // Necesitamos hasta la columna 47 (AU) aprox
+    const rowCount = Math.min(sheet.rowCount, 10000);
     await sheet.loadCells(`A1:BA${rowCount}`);
 
+    let cCuit = 2, fIdx = 33, nIdx = 37, cCuitJD = 45, jdIdx = 46;
+
+    // Buscar encabezados
+    let found = false;
+    for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 50; c++) {
+            const val = String(sheet.getCell(r, c).value || '').toLowerCase().trim();
+            if (val === 'cuit' || (val.includes('cuit') && c < 5)) { cCuit = c; found = true; }
+            if (val.includes('facturacion') || val === 'fact') fIdx = c;
+            if (val.includes('nosis')) nIdx = c;
+            if (val.includes('cuit') && c > 40) cCuitJD = c;
+            if (val === 'credito jd' || val === 'jd') jdIdx = c;
+        }
+        if (found) break;
+    }
+
     for (let r = 1; r < rowCount; r++) {
-        const cuitVal = String(sheet.getCell(r, 2).value || '').replace(/[^0-9]/g, '');
-        if (cuitVal) {
-            maps.general[cuitVal] = {
-                nosis: sheet.getCell(r, 37).value || '',
-                fact: sheet.getCell(r, 33).value || ''
+        const cVal = formatCuit(sheet.getCell(r, cCuit).value);
+        if (cVal) {
+            maps.general[cVal] = {
+                nosis: sheet.getCell(r, nIdx).value || '',
+                fact: sheet.getCell(r, fIdx).value || ''
             };
         }
-        const cuitJDVal = String(sheet.getCell(r, 45).value || '').replace(/[^0-9]/g, '');
-        if (cuitJDVal) {
-            maps.jd[cuitJDVal] = sheet.getCell(r, 46).value || '';
+        const cJDVal = formatCuit(sheet.getCell(r, cCuitJD).value);
+        if (cJDVal) {
+            maps.jd[cJDVal] = sheet.getCell(r, jdIdx).value || '';
         }
     }
     return maps;
@@ -242,6 +256,13 @@ async function getDCPData(doc) {
         }
     }
     return map;
+}
+
+function formatCuit(val) {
+    if (val == null || val === '') return '';
+    // Evitar notación científica y limpiar caracteres no numéricos
+    let s = (typeof val === 'number') ? val.toLocaleString('fullwide', { useGrouping: false }) : String(val);
+    return s.replace(/[^0-9]/g, '');
 }
 
 function parseLocaleNum(val) {
