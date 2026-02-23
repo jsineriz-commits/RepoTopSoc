@@ -11,43 +11,47 @@ export default async function handler(req, res) {
     try {
         const doc = await getGoogleSheet(sheetId);
         const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'usuarios');
-
         if (!sheet) {
-            return res.status(500).json({ success: false, error: 'No se encontró la hoja "usuarios" en el documento.' });
+            return res.status(500).json({ success: false, error: 'No se encontró la hoja "usuarios".' });
         }
 
-        const rows = await sheet.getRows();
+        // Cargamos las primeras 100 filas para el login (ajustar si hay más usuarios)
+        await sheet.loadCells('A1:G100');
 
         const searchEmail = email.toLowerCase().trim();
 
-        for (const row of rows) {
-            // Perfil Usuario Normal
-            const dbEmail = (row.get('Email') || '').toLowerCase().trim();
-            const dbPass = (row.get('Password') || '').trim();
+        for (let i = 1; i < 100; i++) { // Empezamos en 1 para saltar el encabezado
+            // 1. Usuario Normal (Col A=0, B=1, C=2, D=3)
+            const dbEmail = String(sheet.getCell(i, 0).value || '').toLowerCase().trim();
+            const dbPass = String(sheet.getCell(i, 1).value || '').trim();
 
             if (dbEmail === searchEmail && dbPass === password) {
+                const rawId = sheet.getCell(i, 3).value;
+                const numId = parseInt(rawId, 10);
+
                 return res.json({
                     success: true,
-                    userId: row.get('ID'),
-                    name: row.get('Nombre') || dbEmail.split('@')[0],
+                    userId: isNaN(numId) ? "0" : String(numId),
+                    name: String(sheet.getCell(i, 2).value || dbEmail.split('@')[0]).trim(),
                     email: dbEmail
                 });
             }
 
-            // Perfil Administrador (usando los mismos campos o columnas específicas)
-            const adminEmail = (row.get('AdminEmail') || '').toLowerCase().trim();
-            const adminPass = (row.get('AdminPassword') || '').trim();
+            // 2. Administrador (Col F=5, G=6)
+            const adminEmail = String(sheet.getCell(i, 5).value || '').toLowerCase().trim();
+            const adminPass = String(sheet.getCell(i, 6).value || '').trim();
 
             if (adminEmail !== '' && adminEmail === searchEmail && adminPass === password) {
                 return res.json({
                     success: true,
                     userId: "0",
-                    name: row.get('Nombre') || 'Administrador',
+                    name: String(sheet.getCell(i, 2).value || 'Administrador').trim(),
                     email: adminEmail,
                     isAdmin: true
                 });
             }
         }
+
 
         return res.status(401).json({ success: false, error: 'Credenciales incorrectas.' });
     } catch (error) {
