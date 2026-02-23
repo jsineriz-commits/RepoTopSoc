@@ -36,67 +36,81 @@ export default async function handler(req, res) {
         }) || cols[1];
 
         const processedRows = mbData.data.rows.map(row => {
-            const obj = {};
-            cols.forEach((col, i) => { obj[col] = row[i]; });
+            const raw = {};
+            cols.forEach((col, i) => { raw[col] = row[i]; });
 
-            const cuitVal = String(obj[cuitColName] || '').replace(/[^0-9]/g, '');
+            // Versión normalizada para acceso fácil
+            const obj = {};
+            Object.keys(raw).forEach(k => { obj[k.toLowerCase()] = raw[k]; });
+
+            const cuitVal = String(obj[cuitColName.toLowerCase()] || '').replace(/[^0-9]/g, '');
             const extra = baseClaveMap[cuitVal] || { Kt: '-', Kv: '-', '% u': '-' };
             const creditGen = creditMaps.general[cuitVal] || { nosis: '-', fact: '-' };
             const creditJD = creditMaps.jd[cuitVal] || '-';
 
-            obj['Kt'] = extra.Kt === '-' ? '' : extra.Kt;
-            obj['Kv'] = extra.Kv === '-' ? '' : extra.Kv;
-            obj['% u'] = extra['% u'] === '-' ? '' : extra['% u'];
+            const rowData = { ...raw }; // Mantener nombres originales de Metabase
 
-            obj['CCC'] = (obj['conc_gral'] != null && obj['conc_gral'] !== '') ? Math.round(parseFloat(obj['conc_gral']) * 100) + '%' : '';
-            obj['CCC ult 5'] = (obj['porc_conc_5_Tot'] != null && obj['porc_conc_5_Tot'] !== '') ? Math.round(parseFloat(obj['porc_conc_5_Tot']) * 100) + '%' : '';
+            rowData['Kt'] = extra.Kt === '-' ? '' : extra.Kt;
+            rowData['Kv'] = extra.Kv === '-' ? '' : extra.Kv;
+            rowData['% u'] = extra['% u'] === '-' ? '' : extra['% u'];
 
-            obj['Ultimo ingreso'] = getRelativeTime(obj['ult_ingreso']);
-            obj['Fecha Creacion'] = formatDateShort(obj['fecha_creacion']);
+            // Usar keys normalizadas para buscar datos de Metabase
+            const concGral = obj['conc_gral'];
+            const conc5Tot = obj['porc_conc_5_tot'] || obj['porc_conc_5_total'] || obj['conc_5_tot'];
 
-            obj['nosis'] = creditGen.nosis === '-' ? '' : creditGen.nosis;
+            rowData['CCC'] = (concGral != null && concGral !== '') ? Math.round(parseFloat(concGral) * 100) + '%' : '';
+            rowData['CCC ult 5'] = (conc5Tot != null && conc5Tot !== '') ? Math.round(parseFloat(conc5Tot) * 100) + '%' : '';
+
+            rowData['Ultimo ingreso'] = getRelativeTime(obj['ult_ingreso']);
+            rowData['Fecha Creacion'] = formatDateShort(obj['fecha_creacion']);
+
+            rowData['nosis'] = creditGen.nosis === '-' ? '' : creditGen.nosis;
             const fVal = parseLocaleNum(creditGen.fact);
-            obj['fact'] = (fVal !== 0) ? (fVal / 1000000).toFixed(1) + 'M' : '';
+            rowData['fact'] = (fVal !== 0) ? (fVal / 1000000).toFixed(1) + 'M' : '';
 
             const cjd = parseFloat(String(creditJD).replace(',', '.'));
-            obj['credito jd'] = (!isNaN(cjd) && creditJD !== '') ? Math.round(cjd).toString() : (creditJD === '-' ? '' : creditJD);
-            obj['SAC'] = sacMap[cuitVal] || '';
+            rowData['credito jd'] = (!isNaN(cjd) && creditJD !== '') ? Math.round(cjd).toString() : (creditJD === '-' ? '' : creditJD);
+            rowData['SAC'] = sacMap[cuitVal] || '';
 
             const dcpInfo = dcpMap[cuitVal] || { dcp: '', dcp_ef: '', dcp_prop: '' };
-            obj['DCP'] = dcpInfo.dcp;
-            obj['DCP EF'] = dcpInfo.dcp_ef;
-            obj['DCP Prop'] = dcpInfo.dcp_prop;
+            rowData['DCP'] = dcpInfo.dcp;
+            rowData['DCP EF'] = dcpInfo.dcp_ef;
+            rowData['DCP Prop'] = dcpInfo.dcp_prop;
 
-            obj['CI FAE'] = (parseInt(obj['sugerido_ci_faena']) === 1) ? '✅' : '';
-            obj['CI INV'] = (parseInt(obj['sugerido_ci_invernada']) === 1) ? '✅' : '';
+            rowData['CI FAE'] = (parseInt(obj['sugerido_ci_faena']) === 1) ? '✅' : '';
+            rowData['CI INV'] = (parseInt(obj['sugerido_ci_invernada']) === 1) ? '✅' : '';
 
-            obj['Q total OP'] = obj['q_op_total'] || 0;
-            obj['q ope'] = obj['Q total OP'];
+            rowData['Q total OP'] = obj['q_op_total'] || 0;
+            rowData['q ope'] = rowData['Q total OP'];
 
-            obj['FUOp'] = getRelativeTime(obj['Ult_op']);
-            obj['FUAct'] = getRelativeTime(obj['Ult_act']);
+            rowData['FUOp'] = getRelativeTime(obj['ult_op']);
+            rowData['FUAct'] = getRelativeTime(obj['ult_act']);
 
             // GRUPO FAENA
-            obj['OFR (F)'] = obj['q_ofrec_fae'] || '';
-            obj['VEN (F)'] = obj['q_ventas_fae'] || '';
-            obj['CCC (F)'] = (obj['conc_gral_fae'] != null) ? Math.round(parseFloat(obj['conc_gral_fae']) * 100) + '%' : '';
-            obj['CCC ult5 (F)'] = (obj['porc_conc_5_Fae'] != null) ? Math.round(parseFloat(obj['porc_conc_5_Fae']) * 100) + '%' : '';
-            obj['FUV (F)'] = getRelativeTime(obj['FUV_fae']);
-            obj['Q Cis comp (F)'] = obj['cis_com_fae'] || '';
-            obj['COMP (F)'] = obj['q_compras_fae'] || '';
+            rowData['OFR (F)'] = obj['q_ofrec_fae'] || '';
+            rowData['VEN (F)'] = obj['q_ventas_fae'] || '';
+            const concFae = obj['conc_gral_fae'];
+            const conc5Fae = obj['porc_conc_5_fae'];
+            rowData['CCC (F)'] = (concFae != null) ? Math.round(parseFloat(concFae) * 100) + '%' : '';
+            rowData['CCC ult5 (F)'] = (conc5Fae != null) ? Math.round(parseFloat(conc5Fae) * 100) + '%' : '';
+            rowData['FUV (F)'] = getRelativeTime(obj['fuv_fae']);
+            rowData['Q Cis comp (F)'] = obj['cis_com_fae'] || '';
+            rowData['COMP (F)'] = obj['q_compras_fae'] || '';
 
             // GRUPO INVERNADA
-            obj['OFR (I)'] = obj['q_ofrec_inv'] || '';
-            obj['VEN (I)'] = obj['q_ventas_inv'] || '';
-            obj['CCC (I)'] = (obj['conc_gral_inv'] != null) ? Math.round(parseFloat(obj['conc_gral_inv']) * 100) + '%' : '';
-            obj['CCC ult5 (I)'] = (obj['porc_conc_5_Inv'] != null) ? Math.round(parseFloat(obj['porc_conc_5_Inv']) * 100) + '%' : '';
-            obj['FUV (I)'] = getRelativeTime(obj['FUV_inv']);
-            obj['Q Cis comp (I)'] = obj['cis_com_inv'] || '';
-            obj['COMP (I)'] = obj['q_compras_inv'] || '';
+            rowData['OFR (I)'] = obj['q_ofrec_inv'] || '';
+            rowData['VEN (I)'] = obj['q_ventas_inv'] || '';
+            const concInv = obj['conc_gral_inv'];
+            const conc5Inv = obj['porc_conc_5_inv'];
+            rowData['CCC (I)'] = (concInv != null) ? Math.round(parseFloat(concInv) * 100) + '%' : '';
+            rowData['CCC ult5 (I)'] = (conc5Inv != null) ? Math.round(parseFloat(conc5Inv) * 100) + '%' : '';
+            rowData['FUV (I)'] = getRelativeTime(obj['fuv_inv']);
+            rowData['Q Cis comp (I)'] = obj['cis_com_inv'] || '';
+            rowData['COMP (I)'] = obj['q_compras_inv'] || '';
 
-            obj['FUC'] = getRelativeTime(obj['FUC']);
+            rowData['FUC'] = getRelativeTime(obj['fuc']);
 
-            return obj;
+            return rowData;
         });
 
         processedRows.sort((a, b) => (parseFloat(b['Q total OP']) || 0) - (parseFloat(a['Q total OP']) || 0));
@@ -134,25 +148,29 @@ async function getBaseClaveData(doc) {
     const rowCount = Math.min(sheet.rowCount, 5000);
     await sheet.loadCells(`A1:Z${rowCount}`);
 
-    // Encontrar índices
+    // Encontrar índices con mejores búsquedas y defaults de Código.js
     let colCuit = -1, colKt = -1, colKv = -1, colPctU = -1;
     for (let c = 0; c < 26; c++) {
-        const val = String(sheet.getCell(0, c).value || '').toLowerCase();
+        const val = String(sheet.getCell(0, c).value || '').toLowerCase().trim();
         if (val === 'cuit') colCuit = c;
         if (val === 'kt') colKt = c;
         if (val === 'kv') colKv = c;
-        if (val === '% u') colPctU = c;
+        if (val === '% u' || val === '%u' || val.includes('utilizacion')) colPctU = c;
     }
 
-    if (colCuit === -1) return map;
+    // Defaults según Código.js (1-based en Excel, 0-based aquí)
+    if (colCuit === -1) colCuit = 1; // Col B
+    if (colKt === -1) colKt = 2;     // Col C
+    if (colKv === -1) colKv = 3;     // Col D
+    if (colPctU === -1) colPctU = 8; // Col I
 
     for (let r = 1; r < rowCount; r++) {
         const cuitVal = String(sheet.getCell(r, colCuit).value || '').replace(/[^0-9]/g, '');
         if (cuitVal) {
             map[cuitVal] = {
-                Kt: sheet.getCell(r, colKt !== -1 ? colKt : 1).value || '-',
-                Kv: sheet.getCell(r, colKv !== -1 ? colKv : 2).value || '-',
-                '% u': sheet.getCell(r, colPctU !== -1 ? colPctU : 3).value || '-'
+                Kt: sheet.getCell(r, colKt).value || '-',
+                Kv: sheet.getCell(r, colKv).value || '-',
+                '% u': sheet.getCell(r, colPctU).value || '-'
             };
         }
     }
