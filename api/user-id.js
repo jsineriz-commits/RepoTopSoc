@@ -13,12 +13,12 @@ export default async function handler(req, res) {
         const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'usuarios');
         if (!sheet) return res.status(500).json({ error: 'No se encontró la hoja "usuarios".' });
 
-        const rows = await sheet.getRows();
+        await sheet.loadCells('A1:D500'); // Col C=Nombre, Col D=ID
 
-        for (const row of rows) {
-            const dbName = (row.get('Nombre') || '').trim();
+        for (let i = 1; i < 500; i++) {
+            const dbName = (sheet.getCell(i, 2).value || '').trim();
             if (dbName.toLowerCase() === name.toLowerCase()) {
-                return res.json({ id: row.get('ID') });
+                return res.json({ id: sheet.getCell(i, 3).value });
             }
         }
 
