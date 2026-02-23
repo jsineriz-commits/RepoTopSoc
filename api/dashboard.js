@@ -130,14 +130,29 @@ async function getBaseClaveData(doc) {
     const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'base clave');
     if (!sheet) return map;
 
-    const rows = await sheet.getRows();
-    for (const row of rows) {
-        const cleanCuit = String(row.get('CUIT') || '').replace(/[^0-9]/g, '');
-        if (cleanCuit) {
-            map[cleanCuit] = {
-                Kt: row.get('Kt') || '-',
-                Kv: row.get('Kv') || '-',
-                '% u': row.get('% u') || '-'
+    // Cargamos hasta la columna Z y todas las filas
+    const rowCount = Math.min(sheet.rowCount, 5000);
+    await sheet.loadCells(`A1:Z${rowCount}`);
+
+    // Encontrar índices
+    let colCuit = -1, colKt = -1, colKv = -1, colPctU = -1;
+    for (let c = 0; c < 26; c++) {
+        const val = String(sheet.getCell(0, c).value || '').toLowerCase();
+        if (val === 'cuit') colCuit = c;
+        if (val === 'kt') colKt = c;
+        if (val === 'kv') colKv = c;
+        if (val === '% u') colPctU = c;
+    }
+
+    if (colCuit === -1) return map;
+
+    for (let r = 1; r < rowCount; r++) {
+        const cuitVal = String(sheet.getCell(r, colCuit).value || '').replace(/[^0-9]/g, '');
+        if (cuitVal) {
+            map[cuitVal] = {
+                Kt: sheet.getCell(r, colKt !== -1 ? colKt : 1).value || '-',
+                Kv: sheet.getCell(r, colKv !== -1 ? colKv : 2).value || '-',
+                '% u': sheet.getCell(r, colPctU !== -1 ? colPctU : 3).value || '-'
             };
         }
     }
@@ -149,20 +164,21 @@ async function getCreditPerformanceData(doc) {
     const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'credit performance');
     if (!sheet) return maps;
 
-    const rows = await sheet.getRows();
-    for (const row of rows) {
-        // Note: Column names depend on the header row of the sheet.
-        // Based on Código.js: Col C (index 2) is CUIT
-        const cuitVal = String(row._rawData[2] || '').replace(/[^0-9]/g, '');
+    const rowCount = Math.min(sheet.rowCount, 5000);
+    // Necesitamos hasta la columna 47 (AU) aprox
+    await sheet.loadCells(`A1:BA${rowCount}`);
+
+    for (let r = 1; r < rowCount; r++) {
+        const cuitVal = String(sheet.getCell(r, 2).value || '').replace(/[^0-9]/g, '');
         if (cuitVal) {
             maps.general[cuitVal] = {
-                nosis: row._rawData[37] || '',
-                fact: row._rawData[33] || ''
+                nosis: sheet.getCell(r, 37).value || '',
+                fact: sheet.getCell(r, 33).value || ''
             };
         }
-        const cuitJDVal = String(row._rawData[45] || '').replace(/[^0-9]/g, '');
+        const cuitJDVal = String(sheet.getCell(r, 45).value || '').replace(/[^0-9]/g, '');
         if (cuitJDVal) {
-            maps.jd[cuitJDVal] = row._rawData[46] || '';
+            maps.jd[cuitJDVal] = sheet.getCell(r, 46).value || '';
         }
     }
     return maps;
@@ -173,10 +189,12 @@ async function getSACData(doc) {
     const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'sac');
     if (!sheet) return map;
 
-    const rows = await sheet.getRows();
-    for (const row of rows) {
-        const cuit = String(row._rawData[17] || '').replace(/[^0-9]/g, '');
-        const valRaw = row._rawData[22];
+    const rowCount = Math.min(sheet.rowCount, 5000);
+    await sheet.loadCells(`A1:Z${rowCount}`);
+
+    for (let r = 1; r < rowCount; r++) {
+        const cuit = String(sheet.getCell(r, 17).value || '').replace(/[^0-9]/g, '');
+        const valRaw = sheet.getCell(r, 22).value;
         if (cuit) {
             const num = parseFloat(valRaw);
             if (!isNaN(num) && num >= 0 && num <= 50) {
@@ -192,12 +210,14 @@ async function getDCPData(doc) {
     const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'dcp');
     if (!sheet) return map;
 
-    const rows = await sheet.getRows();
-    for (const row of rows) {
-        const cuit = String(row.get('Cuit') || row.get('CUIT') || row._rawData[2]).replace(/[^0-9]/g, '');
+    const rowCount = Math.min(sheet.rowCount, 5000);
+    await sheet.loadCells(`A1:K${rowCount}`);
+
+    for (let r = 1; r < rowCount; r++) {
+        const cuit = String(sheet.getCell(r, 2).value || '').replace(/[^0-9]/g, '');
         if (cuit) {
-            const valD = row._rawData[3];
-            const valE = row._rawData[4];
+            const valD = sheet.getCell(r, 3).value;
+            const valE = sheet.getCell(r, 4).value;
             const dcpVal = (valD != null && valD !== '') ? Math.round(parseFloat(valD) * 100) + '%' : '';
             const propVal = (valE != null && valE !== '') ? Math.round(parseFloat(valE) * 100) + '%' : '';
             map[cuit] = { dcp: dcpVal, dcp_ef: dcpVal, dcp_prop: propVal };
