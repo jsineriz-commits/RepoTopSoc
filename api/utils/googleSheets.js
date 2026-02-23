@@ -7,8 +7,17 @@ const SCOPES = [
 ];
 
 export async function getGoogleSheet(sheetId) {
-    const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL);
-    const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
+    const accountJson = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+    if (!accountJson) {
+        throw new Error('Falta la variable GOOGLE_SERVICE_ACCOUNT_EMAIL en Vercel.');
+    }
+
+    const serviceAccount = JSON.parse(accountJson);
+    const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+    if (!privateKey) {
+        throw new Error('Falta la variable GOOGLE_PRIVATE_KEY en Vercel.');
+    }
 
     const jwt = new JWT({
         email: serviceAccount.client_email,
