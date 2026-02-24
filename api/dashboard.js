@@ -1,17 +1,14 @@
 import { getMetabaseToken, queryMetabase } from './utils/metabase.js';
-import { getGoogleSheet } from './utils/googleSheets.js';
+import { getGoogleSheetData } from './utils/googleSheets.js';
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     const { userId } = req.body;
     const questionId = process.env.METABASE_QUESTION_ID || '4557';
     const sheetId = process.env.GOOGLE_SHEET_ID;
 
     try {
-        // 1. Fetch data from Metabase
         const token = await getMetabaseToken();
         const mbData = await queryMetabase(token, questionId, userId);
 
@@ -19,16 +16,19 @@ export default async function handler(req, res) {
             return res.json({ success: false, error: 'Sin datos en Metabase.' });
         }
 
-        // 2. Fetch supplemental data from Google Sheets
-        const doc = await getGoogleSheet(sheetId);
+        // Fetch supplemental data from Google Sheets (RAW)
+        const [baseRows, creditRows, sacRows, dcpRows] = await Promise.all([
+            getGoogleSheetData(sheetId, 'base clave!A1:Z5000'),
+            getGoogleSheetData(sheetId, 'credit performance!A1:BA5000'),
+            getGoogleSheetData(sheetId, 'SAC!A1:Z5000'),
+            getGoogleSheetData(sheetId, 'DCP!A1:K1000')
+        ]);
 
-        // Supplemental data maps
-        const baseClaveMap = await getBaseClaveData(doc);
-        const creditMaps = await getCreditPerformanceData(doc);
-        const sacMap = await getSACData(doc);
-        const dcpMap = await getDCPData(doc);
+        const baseClaveMap = parseBaseClave(baseRows);
+        const creditMaps = parseCreditPerformance(creditRows);
+        const sacMap = parseSAC(sacRows);
+        const dcpMap = parseDCP(dcpRows);
 
-        // 3. Merge and Transform
         const cols = mbData.data.cols.map(c => c.name);
         const cuitColName = cols.find(c => {
             const l = String(c).toLowerCase();
@@ -39,7 +39,6 @@ export default async function handler(req, res) {
             const raw = {};
             cols.forEach((col, i) => { raw[col] = row[i]; });
 
-            // Versión normalizada para acceso fácil
             const obj = {};
             Object.keys(raw).forEach(k => { obj[k.toLowerCase()] = raw[k]; });
 
@@ -48,13 +47,13 @@ export default async function handler(req, res) {
             const creditGen = creditMaps.general[cuitVal] || { nosis: '-', fact: '-' };
             const creditJD = creditMaps.jd[cuitVal] || '-';
 
-            const rowData = { ...raw }; // Mantener nombres originales de Metabase
+            const rowData = { ...raw };
 
             rowData['Kt'] = extra.Kt === '-' ? '' : extra.Kt;
             rowData['Kv'] = extra.Kv === '-' ? '' : extra.Kv;
             rowData['% u'] = extra['% u'] === '-' ? '' : extra['% u'];
+            rowData['Prov_direc_fisc'] = extra.prov === '-' ? '' : extra.prov;
 
-            // Usar keys normalizadas para buscar datos de Metabase
             const concGral = obj['conc_gral'];
             const conc5Tot = obj['porc_conc_5_tot'] || obj['porc_conc_5_total'] || obj['conc_5_tot'];
 
@@ -137,122 +136,76 @@ export default async function handler(req, res) {
     }
 }
 
-// --- HELPERS ---
+// --- PARSERS ---
 
-async function getBaseClaveData(doc) {
+function parseBaseClave(rows) {
     const map = {};
-    const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'base clave');
-    if (!sheet) return map;
+    if (!rows || rows.length < 1) return map;
 
-    const rowCount = Math.min(sheet.rowCount, 5000);
-    await sheet.loadCells(`A1:Z${rowCount}`);
+    let c = 1, kt = 2, kv = 3, pu = 8, prov = 10; // K is 10
+    const header = rows[0].map(h => String(h).toLowerCase().trim());
+    if (header.indexOf('cuit') !== -1) c = header.indexOf('cuit');
+    if (header.indexOf('kt') !== -1) kt = header.indexOf('kt');
+    if (header.indexOf('kv') !== -1) kv = header.indexOf('kv');
+    if (header.indexOf('% u') !== -1) pu = header.indexOf('% u');
+    // Búsqueda flexible para Prov Direc Fisc
+    const pIdx = header.findIndex(h => h.includes('prov') && h.includes('fisc'));
+    if (pIdx !== -1) prov = pIdx;
 
-    let colCuit = 1, colKt = 2, colKv = 3, colPctU = 8;
-
-    // Buscar encabezados en las primeras 5 filas para ser más robustos
-    let found = false;
-    for (let r = 0; r < 5; r++) {
-        for (let c = 0; c < 26; c++) {
-            const val = String(sheet.getCell(r, c).value || '').toLowerCase().trim();
-            if (val === 'cuit' || val.includes('cuit')) { colCuit = c; found = true; }
-            if (val === 'kt') colKt = c;
-            if (val === 'kv') colKv = c;
-            if (val.startsWith('%') || val.includes('utiliz') || val === '% u' || val === '%u') colPctU = c;
-        }
-        if (found) break; // Si encontramos el CUIT, asumimos que esta es la fila de encabezados
-    }
-
-    for (let r = 1; r < rowCount; r++) {
-        const val = sheet.getCell(r, colCuit).value;
-        const cuitVal = formatCuit(val);
-        if (cuitVal && cuitVal.length > 5) {
-            map[cuitVal] = {
-                Kt: sheet.getCell(r, colKt).value || '-',
-                Kv: sheet.getCell(r, colKv).value || '-',
-                '% u': sheet.getCell(r, colPctU).value || '-'
-            };
-        }
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const cuit = formatCuit(row[c]);
+        if (cuit) map[cuit] = {
+            Kt: row[kt] || '-',
+            Kv: row[kv] || '-',
+            '% u': row[pu] || '-',
+            prov: row[prov] || '-'
+        };
     }
     return map;
 }
 
-async function getCreditPerformanceData(doc) {
+function parseCreditPerformance(rows) {
     const maps = { general: {}, jd: {} };
-    const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'credit performance');
-    if (!sheet) return maps;
+    if (!rows || rows.length < 1) return maps;
 
-    const rowCount = Math.min(sheet.rowCount, 5000);
-    await sheet.loadCells(`A1:BA${rowCount}`);
+    let c = 2, f = 33, n = 37, cjd = 45, jd = 46;
+    // Opcional: buscar por nombre si hace falta, pero los indices fijos son más seguros en este sheet
 
-    let cCuit = 2, fIdx = 33, nIdx = 37, cCuitJD = 45, jdIdx = 46;
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const cuit = formatCuit(row[c]);
+        if (cuit) maps.general[cuit] = { nosis: row[n] || '', fact: row[f] || '' };
 
-    // Buscar encabezados
-    let found = false;
-    for (let r = 0; r < 5; r++) {
-        for (let c = 0; c < 50; c++) {
-            const val = String(sheet.getCell(r, c).value || '').toLowerCase().trim();
-            if (val === 'cuit' || (val.includes('cuit') && c < 5)) { cCuit = c; found = true; }
-            if (val.includes('facturacion') || val === 'fact') fIdx = c;
-            if (val.includes('nosis')) nIdx = c;
-            if (val.includes('cuit') && c > 40) cCuitJD = c;
-            if (val === 'credito jd' || val === 'jd') jdIdx = c;
-        }
-        if (found) break;
-    }
-
-    for (let r = 1; r < rowCount; r++) {
-        const cVal = formatCuit(sheet.getCell(r, cCuit).value);
-        if (cVal) {
-            maps.general[cVal] = {
-                nosis: sheet.getCell(r, nIdx).value || '',
-                fact: sheet.getCell(r, fIdx).value || ''
-            };
-        }
-        const cJDVal = formatCuit(sheet.getCell(r, cCuitJD).value);
-        if (cJDVal) {
-            maps.jd[cJDVal] = sheet.getCell(r, jdIdx).value || '';
-        }
+        const cuitJD = formatCuit(row[cjd]);
+        if (cuitJD) maps.jd[cuitJD] = row[jd] || '';
     }
     return maps;
 }
 
-async function getSACData(doc) {
+function parseSAC(rows) {
     const map = {};
-    const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'sac');
-    if (!sheet) return map;
-
-    const rowCount = Math.min(sheet.rowCount, 5000);
-    await sheet.loadCells(`A1:Z${rowCount}`);
-
-    for (let r = 1; r < rowCount; r++) {
-        const cuit = String(sheet.getCell(r, 17).value || '').replace(/[^0-9]/g, '');
-        const valRaw = sheet.getCell(r, 22).value;
-        if (cuit) {
-            const num = parseFloat(valRaw);
-            if (!isNaN(num) && num >= 0 && num <= 50) {
-                map[cuit] = '✅';
-            }
-        }
+    if (!rows || rows.length < 1) return map;
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const cuit = formatCuit(row[17]);
+        const val = parseFloat(row[22]);
+        if (cuit && !isNaN(val) && val >= 0 && val <= 50) map[cuit] = '✅';
     }
     return map;
 }
 
-async function getDCPData(doc) {
+function parseDCP(rows) {
     const map = {};
-    const sheet = doc.sheetsByIndex.find(s => s.title.toLowerCase() === 'dcp');
-    if (!sheet) return map;
-
-    const rowCount = Math.min(sheet.rowCount, 5000);
-    await sheet.loadCells(`A1:K${rowCount}`);
-
-    for (let r = 1; r < rowCount; r++) {
-        const cuit = String(sheet.getCell(r, 2).value || '').replace(/[^0-9]/g, '');
+    if (!rows || rows.length < 1) return map;
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const cuit = formatCuit(row[2]);
         if (cuit) {
-            const valD = sheet.getCell(r, 3).value;
-            const valE = sheet.getCell(r, 4).value;
-            const dcpVal = (valD != null && valD !== '') ? Math.round(parseFloat(valD) * 100) + '%' : '';
-            const propVal = (valE != null && valE !== '') ? Math.round(parseFloat(valE) * 100) + '%' : '';
-            map[cuit] = { dcp: dcpVal, dcp_ef: dcpVal, dcp_prop: propVal };
+            const d = row[3], e = row[4];
+            const dcp = (d != null && d !== '') ? Math.round(parseFloat(d) * 100) + '%' : '';
+            const prop = (e != null && e !== '') ? Math.round(parseFloat(e) * 100) + '%' : '';
+            map[cuit] = { dcp, dcp_ef: dcp, dcp_prop: prop };
         }
     }
     return map;
@@ -267,11 +220,8 @@ function formatCuit(val) {
 function parseLocaleNum(val) {
     if (val == null || val === '-' || val === '') return 0;
     let s = String(val).replace(/\s/g, "");
-    if (s.includes(',') && s.includes('.')) {
-        s = s.replace(/\./g, "").replace(",", ".");
-    } else if (s.includes(',')) {
-        s = s.replace(",", ".");
-    }
+    if (s.includes(',') && s.includes('.')) s = s.replace(/\./g, "").replace(",", ".");
+    else if (s.includes(',')) s = s.replace(",", ".");
     return parseFloat(s) || 0;
 }
 
@@ -286,9 +236,7 @@ function getRelativeTime(dateStr) {
         if (diffDays < 1) return 'hoy';
         if (diffDays < 30) return diffDays + 'd';
         const m = Math.floor(diffDays / 30);
-        if (m < 12) return m + 'm';
-        const y = Math.floor(diffDays / 365);
-        return (y >= 5) ? '5a' : y + 'a';
+        return (m < 12) ? m + 'm' : Math.floor(diffDays / 365) + 'a';
     } catch (e) { return ''; }
 }
 
@@ -297,9 +245,7 @@ function formatDateShort(dateStr) {
     try {
         const date = new Date(dateStr);
         if (isNaN(date.getTime())) return '';
-        const d = date.getDate();
-        const m = date.getMonth() + 1;
-        const y = date.getFullYear().toString().substr(-2);
+        const d = date.getDate(), m = date.getMonth() + 1, y = date.getFullYear().toString().substr(-2);
         return (d < 10 ? '0' + d : d) + '/' + (m < 10 ? '0' + m : m) + '/' + y;
     } catch (e) { return ''; }
 }
