@@ -64,19 +64,7 @@ async function login(email, password) {
         };
       }
     }
-    
-    // Debug temporario: mostrar qué emails hay realmente en la base de datos
-    const foundEmails = [];
-    for(let j=1; j<data.length; j++) {
-      const e = String(g(data[j], 0)).trim();
-      if(e) foundEmails.push(e);
-    }
-    const emailListStr = foundEmails.slice(0, 5).join(', ') + (foundEmails.length > 5 ? '...' : '');
-
-    return { 
-      success: false, 
-      error: `Credenciales incorrectas. Buscando: ${sEmail}. Emails en DB: [${emailListStr}]` 
-    };
+    return { success: false, error: 'Credenciales incorrectas.' };
   } catch (e) {
     console.error('[logic] login error:', e);
     return { success: false, error: 'Error en login: ' + e.message };
