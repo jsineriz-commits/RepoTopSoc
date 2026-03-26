@@ -374,7 +374,8 @@ async function _assembleDashboard(mbData, userId) {
   let validRows = mbData.rows;
   if (userId !== '0' && userId !== 0) {
     validRows = mbData.rows.filter(r => {
-      const rowIdComer = String(r[C.id_comercial] || '').trim();
+      // Remover comas/puntos de miles que envía Metabase
+      const rowIdComer = String(r[C.id_comercial] || '').replace(/[^0-9]/g, '');
       const rowRep = String(r[C.representante] || '').toLowerCase();
       
       // Match por ID comercial (Asociados Comerciales directos)
