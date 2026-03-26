@@ -50,31 +50,43 @@ async function fetchMetabaseToken() {
  * @returns {Promise<{ rows: any[][], headers: string[] }>}
  */
 async function fetchMetabaseRows(userId, tokenData) {
-  const res = await fetch(tokenData.baseUrl + `api/card/${QUESTION_ID}/query`, {
+  const params = new URLSearchParams();
+  params.append('parameters', '[]');
+
+  const res = await fetch(tokenData.baseUrl + `api/card/${QUESTION_ID}/query/json`, {
     method:  'POST',
     headers: {
-      'Content-Type':        'application/json',
+      'Content-Type':        'application/x-www-form-urlencoded',
       'X-Metabase-Session':  tokenData.id,
     },
-    signal: AbortSignal.timeout(60000),
+    body: params.toString(),
+    signal: AbortSignal.timeout(90000),
   });
 
-  let result;
+  if (!res.ok) {
+    throw new Error(`Metabase JSON Export error (${res.status})`);
+  }
+
+  let jsonArray;
   try {
-    result = await res.json();
+    jsonArray = await res.json();
   } catch (e) {
-    throw new Error(`Metabase devolvió respuesta inválida (${res.status})`);
+    throw new Error(`Metabase devolvió respuesta inválida JSON Export (${res.status})`);
   }
 
-  if (result.status === 'completed' && result.data && result.data.rows) {
-    return {
-      rows:    result.data.rows,
-      headers: result.data.cols.map(c => c.name.trim().toLowerCase()),
-    };
+  if (!Array.isArray(jsonArray)) {
+    throw new Error(`Error en Metabase Export: No devolvió un array. Status: ${res.status}`);
   }
 
-  const errMsg = result.error || result.message || ('Estado: ' + result.status);
-  throw new Error(`Metabase Query error (${res.status}): ${errMsg}`);
+  if (jsonArray.length === 0) {
+    return { rows: [], headers: [] };
+  }
+
+  const rawHeaders = Object.keys(jsonArray[0]);
+  const headers = rawHeaders.map(h => h.trim().toLowerCase());
+  const rows = jsonArray.map(obj => rawHeaders.map(h => obj[h]));
+
+  return { rows, headers };
 }
 
 /**
