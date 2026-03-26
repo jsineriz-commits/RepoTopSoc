@@ -36,11 +36,11 @@ async function login(email, password) {
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
 
-      // Columnas principales: 0=email, 1=pass, 2=nombre, 3=userId
-      const dbEmail = String(g(row, 0)).toLowerCase().trim();
-      const dbPass  = String(g(row, 1)).trim();
+      // Según captura: 0(A)=Pass, 1(B)=Email, 2(C)=Nombre, 3(D)=userId
+      const dbEmail = String(g(row, 1)).toLowerCase().trim();
+      const dbPass  = String(g(row, 0)).trim();
 
-      if (dbEmail === sEmail && dbPass === password) {
+      if (dbEmail && dbEmail === sEmail && dbPass === password) {
         const uid = String(g(row, 3)).replace(/[^0-9]/g, '');
         if (!uid) return { success: false, error: 'ID inválido en base de datos.' };
         return {

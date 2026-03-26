@@ -78,19 +78,14 @@ async function getSheetData(sheetName, numCols) {
   const endCol  = numCols ? colToLetter(numCols) : '';
   const range   = endCol ? `${quoted}!A:${endCol}` : quoted;
 
-  try {
-    const isLoginSheet = sheetName.toLowerCase().trim() === 'usuarios';
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range,
-      valueRenderOption: isLoginSheet ? 'FORMATTED_VALUE' : 'UNFORMATTED_VALUE',
-      dateTimeRenderOption: 'FORMATTED_STRING', // Metabase data usa strings; Sheets aux también
-    });
-    return res.data.values || [];
-  } catch (e) {
-    console.error(`[sheets] getSheetData error ("${sheetName}"):`, e.message);
-    return [];
-  }
+  const isLoginSheet = sheetName.toLowerCase().trim() === 'usuarios';
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range,
+    valueRenderOption: isLoginSheet ? 'FORMATTED_VALUE' : 'UNFORMATTED_VALUE',
+    dateTimeRenderOption: 'FORMATTED_STRING', 
+  });
+  return res.data.values || [];
 }
 
 /**
