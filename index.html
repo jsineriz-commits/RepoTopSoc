@@ -292,6 +292,7 @@
         document.getElementById('acInput').placeholder = 'Cargando comerciales...';
         document.getElementById('acInput').disabled = true;
         populateCommercials();
+        fetchData('0');
       } else {
         document.getElementById('adminControls').style.display = 'none';
         fetchData(currentUser.userId);
@@ -305,8 +306,6 @@
           var inp = document.getElementById('acInput');
           inp.placeholder = 'Seleccionar Comercial...';
           inp.disabled    = false;
-          document.getElementById('tBody').innerHTML =
-            '<tr><td colspan="100" class="empty-state">Seleccione un comercial arriba para comenzar.</td></tr>';
         })
         .catch(function(err) {
           console.error('populateCommercials error:', err);
@@ -553,7 +552,6 @@
       headers.forEach(function(h, index) {
         var th = document.createElement('th');
         th.style.userSelect = 'none';
-        th.style.position   = 'relative';
 
         if (index > 0) {
           th.draggable = true;

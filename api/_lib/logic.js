@@ -8,8 +8,8 @@ const { fetchMetabaseToken, fetchMetabaseRows, fetchMetabaseRowsLive } = require
 // ─── HEADERS ──────────────────────────────────────────────────────────────────
 const HEADERS = [
   'razon_social', 'Kt', 'Kv', '% u', 'CCC', 'CCC ult 5', 'cuit', 'nosis', 'fact', 'SAC',
-  'credito jd', 'Fecha Creacion', 'Ultimo ingreso', 'q_usuarios', 'Prov_direc_fisc',
-  'asociado_comercial', 'representante',
+  'credito jd', 'Fecha Creacion', 'Ultimo ingreso', 'q_usuarios', 'asociado_comercial',
+  'representante', 'Prov_direc_fisc',
   'CI FAE', 'CI INV', 'Q total OP', 'FUOp', 'FUAct', 'MAG',
   'OFR (F)', 'VEN (F)', 'CCC (F)', 'CCC ult5 (F)', 'FUV (F)', 'Q Cis comp (F)', 'COMP (F)',
   'OFR (I)', 'VEN (I)', 'CCC (I)', 'CCC ult5 (I)', 'FUV (I)', 'Q Cis comp (I)', 'COMP (I)',
@@ -286,9 +286,9 @@ function buildRowArray(row, C, bcMap, creditGen, creditJD, sacMap, dcpMap, nowTs
     /* 11 Fecha Creacion     */ _formatDate(v(C.fecha_creacion)),
     /* 12 Ultimo ingreso     */ _relTime(v(C.ult_ingreso), nowTs),
     /* 13 q_usuarios         */ v(C.q_usuarios)                || '',
-    /* 14 Prov_direc_fisc    */ bc.prov                        || '',
-    /* 15 asociado_comercial */ v(C.asociado_comercial)        || '',
-    /* 16 representante      */ v(C.representante)             || '',
+    /* 14 asociado_comercial */ v(C.asociado_comercial)        || '',
+    /* 15 representante      */ v(C.representante)             || '',
+    /* 16 Prov_direc_fisc    */ bc.prov                        || '',
     /* 17 CI FAE             */ (parseInt(v(C.sugerido_ci_faena))     === 1) ? '✅' : '',
     /* 18 CI INV             */ (parseInt(v(C.sugerido_ci_invernada)) === 1) ? '✅' : '',
     /* 19 Q total OP         */ qTotal,
