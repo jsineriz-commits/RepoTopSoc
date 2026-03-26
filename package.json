@@ -2,6 +2,9 @@
   "name": "dcac-crm-dashboard",
   "version": "1.0.0",
   "engines": { "node": "18.x" },
+  "scripts": {
+    "build": "echo 'Skipping build for static site'"
+  },
   "dependencies": {
     "googleapis": "^140.0.0"
   }
