@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0 }
+    body { font-family: 'Inter', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh }
+    #login-view { display: flex; align-items: center; justify-content: center; height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) }
+    #dash-view { display: none }
+    .login-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 400px; box-shadow: 0 25px 50px rgba(0,0,0,.4) }
+    .login-card .brand { text-align: center; margin-bottom: 32px }
+    .login-card .brand-name { font-size: 22px; font-weight: 700; color: #f1f5f9; letter-spacing: -0.5px }
+    .login-card .brand-name span { color: #3b82f6 }
+    .login-card .brand-sub { font-size: 13px; color: #64748b; margin-top: 4px }
+    .login-card .divider { width: 40px; height: 3px; background: linear-gradient(90deg,#3b82f6,#06b6d4); border-radius: 2px; margin: 16px auto 0 }
+    .form-group { margin-bottom: 20px }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px }
+    .form-group input { width: 100%; padding: 12px 16px; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: #f1f5f9; font-size: 15px; font-family: inherit; transition: border .2s }
+    .form-group input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15) }
+    .btn-login { width: 100%; padding: 14px; background: linear-gradient(135deg,#3b82f6,#2563eb); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: transform .15s, box-shadow .15s; font-family: inherit }
+    .btn-login:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(59,130,246,.3) }
+    .btn-login:disabled { opacity: .5; cursor: not-allowed }
+    .login-error { color: #f87171; font-size: 13px; text-align: center; margin-top: 16px; min-height: 20px }
+    .topbar { background: #1e293b; border-bottom: 1px solid #334155; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 9999 }
+    .topbar-left { display: flex; align-items: center; gap: 10px }
+    .topbar-left .icon { width: 32px; height: 32px; background: linear-gradient(135deg,#3b82f6,#06b6d4); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px }
+    .topbar-left h1 { font-size: 16px; font-weight: 600; color: #f1f5f9 }
+    .topbar-center { font-size: 18px; font-weight: 700; color: #f1f5f9 }
+    .topbar-center span { color: #3b82f6 }
+    .topbar-right { display: flex; align-items: center; gap: 10px }
+    .user-chip { background: #0f172a; border: 1px solid #334155; border-radius: 20px; padding: 6px 14px 6px 10px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #94a3b8 }
+    .user-chip .avatar { width: 24px; height: 24px; background: linear-gradient(135deg,#3b82f6,#06b6d4); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 700 }
+    .btn-logout { background: none; border: 1px solid #334155; color: #94a3b8; padding: 6px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all .2s }
+    .btn-logout:hover { border-color: #f87171; color: #f87171 }
+    .btn-topbar { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all .2s; display: none; align-items: center; gap: 8px }
+    .btn-topbar:hover { border-color: #3b82f6; background: #334155; box-shadow: 0 0 10px rgba(59,130,246,0.2) }
+    .btn-topbar svg { width: 16px; height: 16px; color: #3b82f6 }
+    .btn-topbar:disabled { opacity: .4; cursor: not-allowed }
+    .ac-selector { display: none; position: relative; margin-left: 20px }
+    .ac-dropdown { position: relative; width: 250px }
+    .ac-dropdown input { width: 100%; background: #1e293b; border: 1px solid #334155; color: #f1f5f9; padding: 8px 35px 8px 12px; border-radius: 8px; font-size: 13px; outline: none; transition: all 0.2s; cursor: pointer }
+    .ac-dropdown input:focus { border-color: #3b82f6; background: #0f172a; cursor: text }
+    .ac-dropdown::after { content: '▼'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #64748b; pointer-events: none }
+    .ac-results { position: absolute; top: 100%; left: 0; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 8px; margin-top: 5px; max-height: 300px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5) }
+    .ac-results div { padding: 10px 12px; cursor: pointer; font-size: 13px; color: #cbd5e1; border-bottom: 1px solid rgba(51,65,85,0.5) }
+    .ac-results div:last-child { border-bottom: none }
+    .ac-results div:hover { background: #334155; color: #3b82f6 }
+    .container { max-width: 98%; margin: 0 auto; padding: 10px 20px }
+    .search-bar { margin-bottom: 24px }
+    .search-bar input { width: 100%; padding: 14px 20px; background: #1e293b; border: 1px solid #334155; border-radius: 12px; color: #f1f5f9; font-size: 15px }
+    .table-card { background: #1e293b; border: 1px solid #334155; border-radius: 14px; overflow: hidden }
+    .table-title { padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; background: #1e293b }
+    .table-wrap { overflow: auto; max-height: calc(100vh - 200px); position: relative; background: #0f172a }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap }
+    th { position: sticky; top: 0; z-index: 80; text-align: center; padding: 12px 16px; background: #1e293b !important; color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #334155; box-shadow: 0 2px 5px rgba(0,0,0,0.4) }
+    td:first-child { position: sticky; left: 0; z-index: 60; background: #0f172a !important; min-width: 220px; max-width: 350px; white-space: normal; box-shadow: 4px 0 10px rgba(0,0,0,0.4); border-right: 1px solid #334155; text-align: center }
+    th:first-child { position: sticky; left: 0; top: 0; z-index: 100; background: #1e293b !important; min-width: 220px; max-width: 350px; box-shadow: 4px 4px 10px rgba(0,0,0,0.4); border-right: 1px solid #334155 }
+    tr:hover td:first-child { background: #273549 !important }
+    td { padding: 12px 16px; font-size: 13px; color: #cbd5e1; border-bottom: 1px solid rgba(51,65,85,.4); text-align: center }
+    .empty-state { text-align: center; padding: 60px 20px; color: #475569 }
+    .spinner { width: 18px; height: 18px; border: 2px solid #334155; border-top-color: #3b82f6; border-radius: 50%; animation: spin .7s linear infinite; display: none }
+    @keyframes spin { to { transform: rotate(360deg) } }
+    .data-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600 }
+    .data-badge.import { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3) }
+    .data-badge.fresh { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3) }
+    .data-badge.loading { background: rgba(234,179,8,0.15); color: #fbbf24; border: 1px solid rgba(234,179,8,0.3) }
+    .drag-handle { height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-bottom: 4px; cursor: grab; transition: all 0.2s }
+    th:hover .drag-handle { background: rgba(59,130,246,0.5) }
+    th.dragging { opacity: 0.4; background: #334155 !important }
+    th.drag-over { border-left: 2px solid #3b82f6 !important }
+    .resizer { position: absolute; right: 0; top: 0; height: 100%; width: 4px; cursor: col-resize; user-select: none; z-index: 100 }
+    .resizer:hover { background: rgba(59,130,246,0.5) }
+    @media print {
+      @page { size: landscape; margin: 5mm }
+      body { background: #fff !important; color: #000 !important }
+      #login-view, .topbar, .search-bar, .table-title, .no-print { display: none !important }
+      .table-wrap { max-height: none !important; overflow: visible !important; width: 100% !important }
+      .table-card { border: none !important; border-radius: 0 !important; background: white !important }
+      table { font-size: 7px !important; white-space: nowrap !important; width: 100% !important; border-collapse: collapse !important }
+      th { background: #1e3a5f !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 4px 6px !important; border: 0.5px solid #1e3a5f !important }
+      td { padding: 3px 4px !important; border-bottom: 0.5px solid #ccc !important; color: #000 !important }
+      td:first-child, th:first-child { position: static !important; box-shadow: none !important; min-width: 150px !important; max-width: 300px !important; white-space: normal !important; text-align: left !important }
+      .pdf-hide { display: none !important }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- LOGIN -->
+  <div id="login-view">
+    <div class="login-card">
+      <div class="brand">
+        <div class="brand-name">de<span>Campo</span>a<span>Campo</span></div>
+        <div class="brand-sub">Mercado Ganadero</div>
+        <div class="divider"></div>
+      </div>
+      <form id="loginForm">
+        <div class="form-group"><label>Email</label><input type="email" id="inp-email" placeholder="usuario@empresa.com" required></div>
+        <div class="form-group"><label>Contraseña</label><input type="password" id="inp-pass" placeholder="••••••••" required></div>
+        <button type="submit" class="btn-login" id="btnLogin">Iniciar Sesión</button>
+      </form>
+      <div class="login-error" id="loginErr"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dash-view">
+    <div class="pdf-guide-marker no-print"></div>
+    <div class="topbar no-print">
+      <div class="topbar-left">
+        <div class="icon">📊</div>
+        <h1>TOP Sociedades</h1>
+      </div>
+      <div class="topbar-center">de<span>Campo</span>a<span>Campo</span></div>
+      <div class="topbar-right">
+        <div id="adminControls" class="ac-selector">
+          <div class="ac-dropdown">
+            <input type="text" id="acInput" placeholder="Seleccionar Comercial..." autocomplete="off">
+            <div id="acResults" class="ac-results"></div>
+          </div>
+        </div>
+        <button class="btn-topbar" id="btnRefresh">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Actualizar
+        </button>
+        <button class="btn-topbar" id="btnExcel">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Excel
+        </button>
+        <button class="btn-topbar" id="btnPDF">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          PDF
+        </button>
+        <div class="user-chip">
+          <div class="avatar" id="userAvatar">U</div>
+          <span id="userName">Usuario</span>
+        </div>
+        <button class="btn-logout" id="btnLogout">Salir</button>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="search-bar no-print">
+        <input type="text" id="searchInput" placeholder="🔍  Buscar por razón social, representante, AC...">
+      </div>
+      <div class="table-card">
+        <div class="table-title no-print">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span id="rowCount" style="font-size:11px;color:#64748b;font-weight:500;"></span>
+            <div class="spinner" id="spinner"></div>
+            <span id="dataBadge" class="data-badge" style="display:none"></span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr id="tHead"></tr></thead>
+            <tbody id="tBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ─── Estado global ───────────────────────────────────────────────────────────
+    var currentUser         = null;   // { userId, name, email, isAdmin, token }
+    var allRows             = [];
+    var allHeaders          = [];
+    var allCommercialsList  = [];
+    var currentSort         = { col: 'Q total OP', asc: false };
+    var draggedCol          = null;
+    var currentUid          = null;
+    var hIdx                = {};
+
+    // ─── Persistencia de sesión en localStorage ───────────────────────────────
+    function saveSession(user) {
+      try { localStorage.setItem('dcac_user', JSON.stringify(user)); } catch(e) {}
+    }
+    function loadSession() {
+      try {
+        var raw = localStorage.getItem('dcac_user');
+        return raw ? JSON.parse(raw) : null;
+      } catch(e) { return null; }
+    }
+    function clearSession() {
+      try { localStorage.removeItem('dcac_user'); } catch(e) {}
+    }
+
+    // ─── Helper fetch autenticado (reemplaza google.script.run) ─────────────────
+    function apiFetch(url, options) {
+      var opts = options || {};
+      opts.headers = opts.headers || {};
+      // Inyectar token de sesión en todas las peticiones
+      if (currentUser && currentUser.token) {
+        opts.headers['Authorization'] = 'Bearer ' + currentUser.token;
+      }
+      if (opts.body && typeof opts.body === 'object') {
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(opts.body);
+      }
+      return fetch(url, opts).then(function(r) {
+        if (r.status === 401) {
+          // Token expirado o inválido → volver al login
+          clearSession();
+          showLoginView();
+          throw new Error('Sesión expirada. Por favor, volvé a iniciar sesión.');
+        }
+        return r.json();
+      });
+    }
+
+    // ─── Login ────────────────────────────────────────────────────────────────────
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var email  = document.getElementById('inp-email').value.trim();
+      var pass   = document.getElementById('inp-pass').value;
+      var btn    = document.getElementById('btnLogin');
+      var errEl  = document.getElementById('loginErr');
+
+      btn.disabled    = true;
+      btn.textContent = 'Iniciando sesión...';
+      errEl.textContent = '';
+
+      fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: pass }),
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(res) {
+        btn.disabled    = false;
+        btn.textContent = 'Iniciar Sesión';
+        if (res.success) {
+          currentUser = {
+            userId:  res.userId,
+            name:    res.name,
+            email:   res.email,
+            isAdmin: res.isAdmin || false,
+            token:   res.token,
+          };
+          saveSession(currentUser);
+          showDashboard();
+        } else {
+          errEl.textContent = res.error || 'Credenciales incorrectas.';
+        }
+      })
+      .catch(function(err) {
+        btn.disabled    = false;
+        btn.textContent = 'Iniciar Sesión';
+        errEl.textContent = 'Error de conexión: ' + err.message;
+      });
+    });
+
+    // ─── Init: intentar restaurar sesión ─────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', function() {
+      var saved = loadSession();
+      if (saved && saved.token) {
+        currentUser = saved;
+        showDashboard();
+      } else {
+        showLoginView();
+      }
+    });
+
+    function showLoginView() {
+      document.getElementById('login-view').style.display = 'flex';
+      document.getElementById('dash-view').style.display  = 'none';
+    }
+
+    // ─── Dashboard ────────────────────────────────────────────────────────────────
+    function showDashboard() {
+      document.getElementById('login-view').style.display = 'none';
+      document.getElementById('dash-view').style.display  = 'block';
+      document.getElementById('userName').textContent     = currentUser.name;
+      document.getElementById('userAvatar').textContent   = currentUser.name.charAt(0).toUpperCase();
+      document.getElementById('btnRefresh').style.display = 'flex';
+      document.getElementById('btnExcel').style.display   = 'flex';
+      document.getElementById('btnPDF').style.display     = 'flex';
+
+      if (currentUser.isAdmin) {
+        document.getElementById('adminControls').style.display = 'flex';
+        document.getElementById('acInput').placeholder = 'Cargando comerciales...';
+        document.getElementById('acInput').disabled = true;
+        populateCommercials();
+      } else {
+        document.getElementById('adminControls').style.display = 'none';
+        fetchData(currentUser.userId);
+      }
+    }
+
+    function populateCommercials() {
+      apiFetch('/api/getAllCommercials')
+        .then(function(list) {
+          allCommercialsList = list || [];
+          var inp = document.getElementById('acInput');
+          inp.placeholder = 'Seleccionar Comercial...';
+          inp.disabled    = false;
+          document.getElementById('tBody').innerHTML =
+            '<tr><td colspan="100" class="empty-state">Seleccione un comercial arriba para comenzar.</td></tr>';
+        })
+        .catch(function(err) {
+          console.error('populateCommercials error:', err);
+          document.getElementById('acInput').placeholder = 'Error al cargar comerciales';
+        });
+    }
+
+    // ─── Selector Admin ───────────────────────────────────────────────────────────
+    var acInput   = document.getElementById('acInput');
+    var acResults = document.getElementById('acResults');
+
+    acInput.addEventListener('focus', function() { showACResults(allCommercialsList); });
+    acInput.addEventListener('input', function() {
+      var q = this.value.toLowerCase();
+      showACResults(allCommercialsList.filter(function(n) { return n.toLowerCase().indexOf(q) !== -1; }));
+    });
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.ac-dropdown')) acResults.style.display = 'none';
+    });
+
+    function showACResults(list) {
+      acResults.innerHTML = '';
+      var allOpt = document.createElement('div');
+      allOpt.textContent = 'Todas las Sociedades';
+      allOpt.onclick = function() { selectAC('', '0'); };
+      acResults.appendChild(allOpt);
+      list.forEach(function(name) {
+        var div = document.createElement('div');
+        div.textContent = name;
+        div.onclick = function() { selectAC(name); };
+        acResults.appendChild(div);
+      });
+      acResults.style.display = 'block';
+    }
+
+    function selectAC(name, forcedId) {
+      acInput.value           = name || 'Todas las Sociedades';
+      acResults.style.display = 'none';
+      handleACChange(forcedId || name);
+    }
+
+    function handleACChange(nameOrId) {
+      clearTable();
+      if (nameOrId === '0' || nameOrId === '') {
+        document.getElementById('userName').textContent  = 'Vista Global';
+        document.getElementById('userAvatar').textContent = 'G';
+        fetchData('0');
+        return;
+      }
+      document.getElementById('userName').textContent  = nameOrId;
+      document.getElementById('userAvatar').textContent = nameOrId.charAt(0).toUpperCase();
+      document.getElementById('spinner').style.display = 'block';
+
+      apiFetch('/api/getUserIdByName?name=' + encodeURIComponent(nameOrId))
+        .then(function(res) {
+          if (res.id) {
+            fetchData(res.id);
+          } else {
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('tBody').innerHTML =
+              '<tr><td colspan="100" class="empty-state">No se encontró ID para "' + nameOrId + '".</td></tr>';
+          }
+        })
+        .catch(function(err) {
+          document.getElementById('spinner').style.display = 'none';
+          document.getElementById('tBody').innerHTML =
+            '<tr><td colspan="100" class="empty-state">Error: ' + err.message + '</td></tr>';
+        });
+    }
+
+    // ─── Helpers de columnas ──────────────────────────────────────────────────────
+    function buildHIdx(headers) {
+      hIdx = {};
+      for (var i = 0; i < headers.length; i++) hIdx[headers[i]] = i;
+    }
+
+    // ─── Fetch Data ───────────────────────────────────────────────────────────────
+    function fetchData(uid) {
+      currentUid = uid;
+      clearTable();
+      setStatus('loading', '⏳ Cargando...');
+      document.getElementById('spinner').style.display = 'block';
+
+      apiFetch('/api/getDashboardData?userId=' + encodeURIComponent(uid))
+        .then(function(res) {
+          if (uid !== currentUid) return;
+          document.getElementById('spinner').style.display = 'none';
+          if (res && res.success) {
+            allHeaders = res.h;
+            buildHIdx(allHeaders);
+            allRows = res.d;
+            renderTable(allHeaders, allRows);
+            var ts = res.importTime ? ' — ' + formatImportTime(res.importTime) : '';
+            setStatus('import', '✅ Datos del día' + ts);
+          } else {
+            document.getElementById('tBody').innerHTML =
+              '<tr><td colspan="100" class="empty-state">⚠️ ' + (res ? res.error : 'Sin respuesta') + '</td></tr>';
+            setStatus('', '');
+          }
+        })
+        .catch(function(e) {
+          if (uid !== currentUid) return;
+          document.getElementById('spinner').style.display = 'none';
+          document.getElementById('tBody').innerHTML =
+            '<tr><td colspan="100" class="empty-state">Error: ' + e.message + '</td></tr>';
+          setStatus('', '');
+        });
+    }
+
+    // ─── Botón Actualizar (Metabase) ──────────────────────────────────────────────
+    document.getElementById('btnRefresh').addEventListener('click', function() {
+      if (!currentUid) return;
+      var btn = document.getElementById('btnRefresh');
+      btn.disabled = true;
+      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Actualizando...';
+      setStatus('loading', '⏳ Consultando Metabase...');
+      document.getElementById('spinner').style.display = 'block';
+
+      apiFetch('/api/refreshUserFromMetabase', {
+        method: 'POST',
+        body:   { userId: currentUid },
+      })
+      .then(function(res) {
+        document.getElementById('spinner').style.display = 'none';
+        btn.disabled = false;
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Actualizar';
+        if (res.success) {
+          allHeaders = res.h;
+          buildHIdx(allHeaders);
+          allRows    = res.d;
+          renderTable(allHeaders, allRows);
+          setStatus('fresh', '🔄 Actualizado ahora desde Metabase');
+        } else {
+          setStatus('loading', '⚠️ Error: ' + res.error);
+        }
+      })
+      .catch(function(e) {
+        document.getElementById('spinner').style.display = 'none';
+        btn.disabled = false;
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Actualizar';
+        setStatus('loading', '⚠️ Error: ' + e.message);
+      });
+    });
+
+    // ─── Botón PDF ────────────────────────────────────────────────────────────────
+    document.getElementById('btnPDF').addEventListener('click', function() {
+      if (allRows.length === 0) return;
+      var ths = document.querySelectorAll('#tHead th');
+      var trs = document.querySelectorAll('#tBody tr');
+      ths.forEach(function(th, i) { th.classList.toggle('pdf-hide', i >= 25); });
+      trs.forEach(function(tr) {
+        tr.querySelectorAll('td').forEach(function(td, i) { td.classList.toggle('pdf-hide', i >= 25); });
+      });
+      window.print();
+      setTimeout(function() {
+        document.querySelectorAll('.pdf-hide').forEach(function(el) { el.classList.remove('pdf-hide'); });
+      }, 500);
+    });
+
+    // ─── Botón Excel ──────────────────────────────────────────────────────────────
+    document.getElementById('btnExcel').addEventListener('click', function() {
+      if (allRows.length === 0) return;
+      var csvLines = [];
+      csvLines.push(allHeaders.map(function(h) { return '"' + h.replace(/"/g,'""') + '"'; }).join(';'));
+      var trs = document.querySelectorAll('#tBody tr');
+      trs.forEach(function(tr) {
+        var rowData = [];
+        tr.querySelectorAll('td').forEach(function(td) { rowData.push('"' + td.textContent.replace(/"/g,'""') + '"'); });
+        csvLines.push(rowData.join(';'));
+      });
+      var csvContent = '\uFEFF' + csvLines.join('\n');
+      var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      var url  = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'TOP_Sociedades_' + (acInput.value || currentUser.name).replace(/\s+/g,'_') + '.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+    // ─── Logout ───────────────────────────────────────────────────────────────────
+    document.getElementById('btnLogout').addEventListener('click', function() {
+      clearSession();
+      currentUser = null; currentUid = null;
+      clearTable();
+      document.getElementById('dash-view').style.display  = 'none';
+      document.getElementById('login-view').style.display = 'flex';
+      document.getElementById('btnRefresh').style.display = 'none';
+      document.getElementById('btnExcel').style.display   = 'none';
+      document.getElementById('btnPDF').style.display     = 'none';
+      document.getElementById('loginForm').reset();
+      document.getElementById('loginErr').textContent     = '';
+      document.getElementById('btnLogin').disabled        = false;
+      document.getElementById('btnLogin').textContent     = 'Iniciar Sesión';
+      document.getElementById('dataBadge').style.display  = 'none';
+      document.getElementById('spinner').style.display    = 'none';
+    });
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────────
+    function formatImportTime(ts) {
+      if (!ts || ts.indexOf('NaN') !== -1) return '';
+      return ts;
+    }
+
+    function setStatus(type, text) {
+      var badge = document.getElementById('dataBadge');
+      if (!text) { badge.style.display = 'none'; return; }
+      badge.style.display = 'inline-block';
+      badge.className     = 'data-badge ' + type;
+      badge.textContent   = text;
+    }
+
+    function clearTable() {
+      allRows = []; allHeaders = [];
+      document.getElementById('tHead').innerHTML   = '';
+      document.getElementById('tBody').innerHTML   = '';
+      document.getElementById('rowCount').textContent = '';
+    }
+
+    // ─── Render Table ─────────────────────────────────────────────────────────────
+    function renderTable(headers, rows) {
+      var headEl = document.getElementById('tHead');
+      var bodyEl = document.getElementById('tBody');
+      headEl.innerHTML = ''; bodyEl.innerHTML = '';
+      document.getElementById('rowCount').textContent = rows.length + ' Sociedades';
+
+      if (rows.length === 0) {
+        bodyEl.innerHTML = '<tr><td colspan="100" class="empty-state">Sin datos para este usuario.</td></tr>';
+        return;
+      }
+
+      var headerLabels = {
+        'credito jd': 'credito<br>jd', 'CCC ult 5': 'CCC<br>ult 5',
+        'Fecha Creacion': 'fecha<br>creacion', 'Ultimo ingreso': 'ultimo<br>ingreso',
+        'q_usuarios': 'q<br>usuarios', 'asociado_comercial': 'asociado<br>comercial'
+      };
+      var fixedWidths = {
+        'CCC': '70px', 'CCC ult 5': '70px', 'credito jd': '60px',
+        'Kt': '80px', 'Kv': '80px', 'SAC': '50px', 'q_usuarios': '60px'
+      };
+
+      headers.forEach(function(h, index) {
+        var th = document.createElement('th');
+        th.style.userSelect = 'none';
+        th.style.position   = 'relative';
+
+        if (index > 0) {
+          th.draggable = true;
+          var handle   = document.createElement('div');
+          handle.className = 'drag-handle';
+          th.appendChild(handle);
+          th.ondragstart = function(e) { draggedCol = h; th.classList.add('dragging'); e.dataTransfer.setData('text/plain', h); };
+          th.ondragover  = function(e) { e.preventDefault(); if (draggedCol !== h) th.classList.add('drag-over'); };
+          th.ondragleave = function()  { th.classList.remove('drag-over'); };
+          th.ondrop      = function(e) { e.preventDefault(); th.classList.remove('drag-over'); var src = e.dataTransfer.getData('text/plain'); if (src !== h) reorderHeaders(src, h); };
+          th.ondragend   = function()  { th.classList.remove('dragging'); };
+
+          var resizer = document.createElement('div');
+          resizer.className = 'resizer';
+          th.appendChild(resizer);
+          resizer.addEventListener('mousedown', function(e) {
+            e.stopPropagation(); e.preventDefault();
+            var startX = e.pageX, startWidth = th.offsetWidth;
+            function onMove(e) { var w = startWidth + (e.pageX - startX); th.style.width = w + 'px'; th.style.minWidth = w + 'px'; }
+            function onUp() { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+          });
+        }
+
+        var wrap  = document.createElement('div');
+        wrap.style.cursor = 'pointer';
+        var label = headerLabels[h] || h.replace(/_/g,' ');
+        if (currentSort.col === h) { label += currentSort.asc ? ' ▲' : ' ▼'; wrap.style.color = '#3b82f6'; }
+        wrap.innerHTML = label;
+        wrap.onclick   = function() { handleSort(h); };
+        th.appendChild(wrap);
+
+        if (fixedWidths[h]) { th.style.width = fixedWidths[h]; th.style.minWidth = fixedWidths[h]; }
+        if (h.indexOf('(F)') !== -1) { th.style.backgroundColor = '#1e3a8a'; th.style.color = '#fff'; th.style.borderLeft = '1px solid #3b82f6'; }
+        else if (h.indexOf('(I)') !== -1) { th.style.backgroundColor = '#7f1d1d'; th.style.color = '#fff'; th.style.borderLeft = '1px solid #ef4444'; }
+        headEl.appendChild(th);
+      });
+
+      // Sort
+      var sortIdx    = hIdx[currentSort.col];
+      var sortedRows = rows.slice().sort(function(a, b) {
+        var v1 = parseSortValue(sortIdx !== undefined ? a[sortIdx] : null);
+        var v2 = parseSortValue(sortIdx !== undefined ? b[sortIdx] : null);
+        if (v1 < v2) return currentSort.asc ? -1 : 1;
+        if (v1 > v2) return currentSort.asc ? 1 : -1;
+        return 0;
+      });
+
+      var fragment = document.createDocumentFragment();
+      sortedRows.forEach(function(row) {
+        var tr = document.createElement('tr');
+        headers.forEach(function(h) {
+          var td  = document.createElement('td');
+          var val = row[hIdx[h]];
+          var txt = (val !== null && val !== undefined && val !== '') ? val : '';
+
+          if (h === 'Kt' || h === 'Kv') {
+            var rawNum = 0;
+            var sValStr = String(txt);
+            if (sValStr.indexOf('k') !== -1) {
+              rawNum = parseFloat(sValStr.replace(',','.').replace('k','')) * 1000;
+              td.textContent = txt;
+            } else {
+              rawNum = parseFloat(sValStr.replace(',','.'));
+              if (!isNaN(rawNum) && rawNum > 0) td.textContent = (rawNum / 1000).toFixed(1) + 'k';
+              else td.textContent = txt;
+            }
+            if (!isNaN(rawNum) && rawNum > 0) {
+              td.style.fontWeight = '700'; td.style.borderRadius = '4px';
+              if      (rawNum > 10000) { td.style.backgroundColor = '#99b755'; td.style.color = '#000'; }
+              else if (rawNum < 5000)  { td.style.backgroundColor = '#b45f06'; td.style.color = '#fff'; }
+              else                     { td.style.backgroundColor = '#999999'; td.style.color = '#fff'; }
+            }
+          } else if (h === '% u' || h.indexOf('CCC') !== -1 || h.indexOf('DCP') !== -1) {
+            var cleanVal = String(val || '').replace('%','').replace(',','.');
+            var num = parseFloat(cleanVal);
+            if ((h.indexOf('CCC') !== -1 || h.indexOf('DCP') !== -1) && String(val).indexOf('%') !== -1) num = num / 100;
+            if (!isNaN(num)) {
+              td.textContent = Math.round(num * 100) + '%';
+              td.style.fontWeight = '700'; td.style.borderRadius = '4px';
+              td.style.backgroundColor = getScaleColor(num); td.style.color = '#000';
+            } else { td.textContent = txt; }
+          } else if (h.indexOf('(F)') !== -1) {
+            td.textContent = txt;
+            td.style.backgroundColor = 'rgba(37,99,235,0.08)';
+            td.style.borderLeft      = '1px solid rgba(59,130,246,0.2)';
+            td.style.color           = '#93c5fd';
+          } else if (h.indexOf('(I)') !== -1) {
+            td.textContent = txt;
+            td.style.backgroundColor = 'rgba(220,38,38,0.08)';
+            td.style.borderLeft      = '1px solid rgba(239,68,68,0.2)';
+            td.style.color           = '#fca5a5';
+          } else {
+            td.textContent = txt;
+          }
+          tr.appendChild(td);
+        });
+        fragment.appendChild(tr);
+      });
+      bodyEl.appendChild(fragment);
+    }
+
+    function reorderHeaders(source, target) {
+      var fromIdx = allHeaders.indexOf(source);
+      var toIdx   = allHeaders.indexOf(target);
+      if (fromIdx === -1 || toIdx === -1) return;
+      allHeaders.splice(fromIdx, 1);
+      allHeaders.splice(toIdx, 0, source);
+      renderTable(allHeaders, allRows);
+    }
+
+    function handleSort(col) {
+      currentSort = { col: col, asc: currentSort.col === col ? !currentSort.asc : false };
+      renderTable(allHeaders, allRows);
+    }
+
+    function parseSortValue(val) {
+      if (val === null || val === undefined || val === '-' || val === '') return -99999999;
+      var s = String(val).toLowerCase().trim();
+      if (s === 'hoy') return 0;
+      if (s.indexOf('d') !== -1) return parseInt(s) || 0;
+      if (s.indexOf('m') !== -1 && s.indexOf('m') === s.length - 1) return (parseInt(s) || 0) * 30;
+      if (s.indexOf('a') !== -1) return (parseInt(s) || 0) * 365;
+      return parseFloat(s.replace('%','').replace('m','').replace(/[^0-9.-]/g,'')) || 0;
+    }
+
+    function getScaleColor(value) {
+      value = Math.max(0, Math.min(1, value));
+      var r, g, b;
+      if (value <= 0.5) {
+        var f = value * 2;
+        r = Math.round(230 + (255 - 230) * f);
+        g = Math.round(124 + (255 - 124) * f);
+        b = Math.round(115 + (255 - 115) * f);
+      } else {
+        var f = (value - 0.5) * 2;
+        r = Math.round(255 + (87  - 255) * f);
+        g = Math.round(255 + (187 - 255) * f);
+        b = Math.round(255 + (138 - 255) * f);
+      }
+      return 'rgb(' + r + ',' + g + ',' + b + ')';
+    }
+
+    // ─── Búsqueda local ───────────────────────────────────────────────────────────
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+      var q = e.target.value.toLowerCase();
+      if (!q) { renderTable(allHeaders, allRows); return; }
+      var filtered = allRows.filter(function(row) {
+        return row.some(function(val) { return String(val).toLowerCase().indexOf(q) !== -1; });
+      });
+      renderTable(allHeaders, filtered);
+    });
+  </script>
+</body>
+</html>

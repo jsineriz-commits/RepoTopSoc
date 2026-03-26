@@ -1,13 +1,11 @@
 {
-    "version": 2,
-    "rewrites": [
-        {
-            "source": "/api/(.*)",
-            "destination": "/api/$1"
-        },
-        {
-            "source": "/((?!api/|.*\\.).*)",
-            "destination": "/index.html"
-        }
-    ]
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/warmUp",
+      "schedule": "0 11 * * *"
+    }
+  ]
 }
