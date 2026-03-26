@@ -3,9 +3,14 @@
   "version": "1.0.0",
   "engines": { "node": "18.x" },
   "scripts": {
-    "build": "mkdir -p dist && cp public/index.html dist/index.html"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "googleapis": "^140.0.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
   }
 }
