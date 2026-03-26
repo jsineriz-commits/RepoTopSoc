@@ -349,6 +349,9 @@ async function _buildDashboard(userId, tokenData) {
 }
 
 async function _assembleDashboard(mbData, userId) {
+  // Limpiar userId de cualquier coma que venga del frontend o de Google Sheets FORMATTED_VALUE
+  const safeUserId = String(userId).replace(/[^0-9]/g, '');
+
   const hMap = Object.create(null);
   for (let h = 0; h < mbData.headers.length; h++) hMap[mbData.headers[h]] = h;
   const C   = buildColumnMap(hMap);
@@ -357,12 +360,12 @@ async function _assembleDashboard(mbData, userId) {
 
   // 1. Obtener nombre del usuario si necesita filtro local (no admin)
   let userName = '';
-  if (userId !== '0' && userId !== 0) {
+  if (safeUserId !== '0' && safeUserId !== '') {
     try {
       const usersData = await getSheetData('usuarios');
       for (let i = 1; i < usersData.length; i++) {
         const rId = String(g(usersData[i], 3)).replace(/[^0-9]/g, '');
-        if (rId === String(userId)) {
+        if (rId === safeUserId) {
           userName = String(g(usersData[i], 2)).trim();
           break;
         }
@@ -372,14 +375,15 @@ async function _assembleDashboard(mbData, userId) {
 
   // 2. Filtrar localmente si no es administrador (userId != 0)
   let validRows = mbData.rows;
-  if (userId !== '0' && userId !== 0) {
+  
+  if (safeUserId !== '0' && safeUserId !== '') {
     validRows = mbData.rows.filter(r => {
       // Remover comas/puntos de miles que envía Metabase
       const rowIdComer = String(r[C.id_comercial] || '').replace(/[^0-9]/g, '');
       const rowRep = String(r[C.representante] || '').toLowerCase();
       
       // Match por ID comercial (Asociados Comerciales directos)
-      if (rowIdComer === String(userId)) return true;
+      if (rowIdComer === safeUserId) return true;
       
       // Match por nombre de representante (Oficinas, etc.)
       if (userName) {
