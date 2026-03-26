@@ -266,7 +266,8 @@ function buildRowArray(row, C, bcMap, creditGen, creditJD, sacMap, dcpMap, nowTs
   const qTotal = (parseFloat(row[C.q_ventas_fae]  || 0)
                + parseFloat(row[C.q_ventas_inv]   || 0)
                + parseFloat(row[C.q_compras_fae]  || 0)
-               + parseFloat(row[C.q_compras_inv]  || 0));
+               + parseFloat(row[C.q_compras_inv]  || 0)
+               + parseFloat(row[C.q_ventas_mag]   || 0));
 
   const v = (idx) => (idx !== undefined && row[idx] !== undefined) ? row[idx] : '';
 
