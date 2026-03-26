@@ -19,15 +19,18 @@ async function getAuthClient() {
     if (rawKey && rawKey.trim().startsWith('{')) {
       credentials = JSON.parse(rawKey);
     } else {
-      // Fallback a las variables viejas del proyecto
-      // GOOGLE_SERVICE_ACCOUNT_EMAIL contenía un JSON con client_email
-      // GOOGLE_PRIVATE_KEY contenía la llave privada
-      const accountJson = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-      if (accountJson) {
-        const parsedAccount = JSON.parse(accountJson);
-        const privateKey = process.env.GOOGLE_PRIVATE_KEY?.trim().replace(/\\n/g, '\n').replace(/"/g, '');
+      const emailVar = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+      if (emailVar) {
+        let actualEmail = emailVar.trim();
+        try {
+          // Por si acaso fuera un JSON con client_email
+          const parsed = JSON.parse(emailVar);
+          if (parsed && parsed.client_email) actualEmail = parsed.client_email;
+        } catch(e) {}
+        
+        const privateKey = (process.env.GOOGLE_PRIVATE_KEY || '').trim().replace(/\\n/g, '\n').replace(/"/g, '');
         credentials = {
-          client_email: parsedAccount.client_email,
+          client_email: actualEmail,
           private_key: privateKey
         };
       } else {
