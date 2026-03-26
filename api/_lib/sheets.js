@@ -4,8 +4,8 @@
 
 const { google } = require('googleapis');
 
-// ID del spreadsheet activo (la misma hoja del proyecto Apps Script)
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '';
+// ID del spreadsheet activo
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID || process.env.GOOGLE_SHEET_ID || '';
 
 let _authClient = null;
 
