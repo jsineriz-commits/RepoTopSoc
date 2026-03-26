@@ -10,12 +10,12 @@ const HEADERS = [
   'razon_social', 'Kt', 'Kv', '% u', 'CCC', 'CCC ult 5', 'cuit', 'nosis', 'fact', 'SAC',
   'credito jd', 'Fecha Creacion', 'Ultimo ingreso', 'q_usuarios', 'Prov_direc_fisc',
   'asociado_comercial', 'representante',
-  'DCP', 'CI FAE', 'CI INV', 'Q total OP', 'FUOp', 'FUAct',
+  'CI FAE', 'CI INV', 'Q total OP', 'FUOp', 'FUAct', 'MAG',
   'OFR (F)', 'VEN (F)', 'CCC (F)', 'CCC ult5 (F)', 'FUV (F)', 'Q Cis comp (F)', 'COMP (F)',
   'OFR (I)', 'VEN (I)', 'CCC (I)', 'CCC ult5 (I)', 'FUV (I)', 'Q Cis comp (I)', 'COMP (I)',
   'FUC', 'DCP EF', 'DCP Prop',
 ];
-const QTOTAL_IDX = 20; // índice de 'Q total OP' en HEADERS
+const QTOTAL_IDX = 19; // índice de 'Q total OP' en HEADERS
 
 // Objetos vacíos pre-definidos (evitan crear {} nuevo por cada fila sin match)
 const _EMPTY_BC  = { Kt: '', Kv: '', pct_u: '', prov: '' };
@@ -216,6 +216,7 @@ function buildColumnMap(hMap) {
     representante:         find(['representante', 'contacto']),
     sugerido_ci_faena:     find(['sugerido_ci_faena', 'ci_faena']),
     sugerido_ci_invernada: find(['sugerido_ci_invernada', 'ci_inv']),
+    q_ventas_mag:          find(['q_ventas_mag', 'mag']),
     q_ventas_fae:          find(['q_ventas_fae', 'q_ven_fae', 'ventas_faena']),
     q_ventas_inv:          find(['q_ventas_inv', 'q_ven_inv', 'ventas_inv']),
     q_compras_fae:         find(['q_compras_fae', 'q_com_fae', 'compras_faena']),
@@ -287,12 +288,12 @@ function buildRowArray(row, C, bcMap, creditGen, creditJD, sacMap, dcpMap, nowTs
     /* 14 Prov_direc_fisc    */ bc.prov                        || '',
     /* 15 asociado_comercial */ v(C.asociado_comercial)        || '',
     /* 16 representante      */ v(C.representante)             || '',
-    /* 17 DCP                */ dcp.dcp,
-    /* 18 CI FAE             */ (parseInt(v(C.sugerido_ci_faena))     === 1) ? '✅' : '',
-    /* 19 CI INV             */ (parseInt(v(C.sugerido_ci_invernada)) === 1) ? '✅' : '',
-    /* 20 Q total OP         */ qTotal,
-    /* 21 FUOp               */ _relTime(v(C.ult_op),       nowTs),
-    /* 22 FUAct              */ _relTime(v(C.ult_act),      nowTs),
+    /* 17 CI FAE             */ (parseInt(v(C.sugerido_ci_faena))     === 1) ? '✅' : '',
+    /* 18 CI INV             */ (parseInt(v(C.sugerido_ci_invernada)) === 1) ? '✅' : '',
+    /* 19 Q total OP         */ qTotal,
+    /* 20 FUOp               */ _relTime(v(C.ult_op),       nowTs),
+    /* 21 FUAct              */ _relTime(v(C.ult_act),      nowTs),
+    /* 22 MAG                */ v(C.q_ventas_mag)   || '',
     /* 23 OFR (F)            */ v(C.q_ofrec_fae)    || '',
     /* 24 VEN (F)            */ v(C.q_ventas_fae)   || '',
     /* 25 CCC (F)            */ _fmtPct(v(C.conc_gral_fae)),

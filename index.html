@@ -637,6 +637,11 @@
               td.style.fontWeight = '700'; td.style.borderRadius = '4px';
               td.style.backgroundColor = getScaleColor(num); td.style.color = '#000';
             } else { td.textContent = txt; }
+          } else if (h === 'MAG') {
+            td.textContent = txt;
+            td.style.backgroundColor = 'rgba(16,185,129,0.08)';
+            td.style.borderLeft      = '1px solid rgba(16,185,129,0.2)';
+            td.style.color           = '#34d399';
           } else if (h.indexOf('(F)') !== -1) {
             td.textContent = txt;
             td.style.backgroundColor = 'rgba(37,99,235,0.08)';
