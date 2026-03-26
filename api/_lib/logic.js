@@ -212,6 +212,7 @@ function buildColumnMap(hMap) {
     porc_conc_5_tot:       find(['porc_conc_5_tot', 'porc_concentracion_5', 'ccc_ult_5']),
     q_usuarios:            find(['q_usuarios', 'cantidad_usuarios', 'usuarios']),
     asociado_comercial:    find(['asociado_comercial', 'nombre_ejecutivo', 'vendedor', 'comercial']),
+    id_comercial:          find(['id_comercial']),
     representante:         find(['representante', 'contacto']),
     sugerido_ci_faena:     find(['sugerido_ci_faena', 'ci_faena']),
     sugerido_ci_invernada: find(['sugerido_ci_invernada', 'ci_inv']),
@@ -354,7 +355,49 @@ async function _assembleDashboard(mbData, userId) {
   const aux = await getAllAuxData();
   const nowTs = Date.now();
 
-  const rows = mbData.rows.map(row =>
+  // 1. Obtener nombre del usuario si necesita filtro local (no admin)
+  let userName = '';
+  if (userId !== '0' && userId !== 0) {
+    try {
+      const usersData = await getSheetData('usuarios');
+      for (let i = 1; i < usersData.length; i++) {
+        const rId = String(g(usersData[i], 3)).replace(/[^0-9]/g, '');
+        if (rId === String(userId)) {
+          userName = String(g(usersData[i], 2)).trim();
+          break;
+        }
+      }
+    } catch(e) { console.error("Error buscando nombre de usuario para filtrado", e); }
+  }
+
+  // 2. Filtrar localmente si no es administrador (userId != 0)
+  let validRows = mbData.rows;
+  if (userId !== '0' && userId !== 0) {
+    validRows = mbData.rows.filter(r => {
+      const rowIdComer = String(r[C.id_comercial] || '').trim();
+      const rowRep = String(r[C.representante] || '').toLowerCase();
+      
+      // Match por ID comercial (Asociados Comerciales directos)
+      if (rowIdComer === String(userId)) return true;
+      
+      // Match por nombre de representante (Oficinas, etc.)
+      if (userName) {
+        if (rowRep.includes(userName.toLowerCase())) return true;
+        
+        // Convertir formato "Apellido, Nombre" de Google Sheets a "Nombre Apellido"
+        if (userName.includes(',')) {
+          const parts = userName.split(',');
+          if (parts.length === 2) {
+             const fname = (parts[1].trim() + ' ' + parts[0].trim()).toLowerCase();
+             if (rowRep.includes(fname)) return true;
+          }
+        }
+      }
+      return false;
+    });
+  }
+
+  const rows = validRows.map(row =>
     buildRowArray(row, C, aux.bc, aux.cg, aux.cj, aux.sac, aux.dcp, nowTs)
   );
 

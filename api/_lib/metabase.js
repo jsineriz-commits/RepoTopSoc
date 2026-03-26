@@ -50,21 +50,12 @@ async function fetchMetabaseToken() {
  * @returns {Promise<{ rows: any[][], headers: string[] }>}
  */
 async function fetchMetabaseRows(userId, tokenData) {
-  const valToPass = (userId === '0' || userId === 0) ? 0 : parseInt(userId, 10);
-
-  const parameters = [{
-    type:   'category',
-    target: ['variable', ['template-tag', 'filtro_usuario']],
-    value:  [String(valToPass)],
-  }];
-
   const res = await fetch(tokenData.baseUrl + `api/card/${QUESTION_ID}/query`, {
     method:  'POST',
     headers: {
       'Content-Type':        'application/json',
       'X-Metabase-Session':  tokenData.id,
     },
-    body:   JSON.stringify({ parameters }),
     signal: AbortSignal.timeout(60000),
   });
 
