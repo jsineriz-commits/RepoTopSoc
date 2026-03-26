@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "engines": { "node": "18.x" },
   "scripts": {
-    "build": "echo 'Skipping build for static site'"
+    "build": "mkdir -p dist && cp public/index.html dist/index.html"
   },
   "dependencies": {
     "googleapis": "^140.0.0"
