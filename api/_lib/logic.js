@@ -381,20 +381,23 @@ async function _assembleDashboard(mbData, userId) {
       // Remover comas/puntos de miles que envía Metabase
       const rowIdComer = String(r[C.id_comercial] || '').replace(/[^0-9]/g, '');
       const rowRep = String(r[C.representante] || '').toLowerCase();
+      const rowAc  = String(r[C.asociado_comercial] || '').toLowerCase();
       
       // Match por ID comercial (Asociados Comerciales directos)
-      if (rowIdComer === safeUserId) return true;
+      if (rowIdComer !== '' && rowIdComer === safeUserId) return true;
       
-      // Match por nombre de representante (Oficinas, etc.)
+      // Match por nombre en asociado_comercial o representante
       if (userName) {
         if (rowRep.includes(userName.toLowerCase())) return true;
+        if (rowAc.includes(userName.toLowerCase())) return true;
         
-        // Convertir formato "Apellido, Nombre" de Google Sheets a "Nombre Apellido"
+        // Convertir formato "Apellido, Nombre" a "Nombre Apellido"
         if (userName.includes(',')) {
           const parts = userName.split(',');
           if (parts.length === 2) {
              const fname = (parts[1].trim() + ' ' + parts[0].trim()).toLowerCase();
              if (rowRep.includes(fname)) return true;
+             if (rowAc.includes(fname)) return true;
           }
         }
       }
