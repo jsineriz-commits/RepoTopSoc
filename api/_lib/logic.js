@@ -58,7 +58,7 @@ async function login(email, password) {
         return {
           success: true,
           userId:  '0',
-          name:    String(g(row, 2) || 'Administrador').trim(),
+          name:    'Administrador (Global)',
           email:   aEmail,
           isAdmin: true,
         };
@@ -418,7 +418,7 @@ async function _assembleDashboard(mbData, userId) {
     h:          HEADERS,
     d:          rows,
     total:      rows.length,
-    importTime: '(LIVE)',
+    importTime: '',
   };
 }
 
