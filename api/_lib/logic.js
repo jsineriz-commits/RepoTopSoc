@@ -61,6 +61,7 @@ async function login(email, password) {
           name:    'Administrador (Global)',
           email:   aEmail,
           isAdmin: true,
+          appVersion: 2
         };
       }
     }

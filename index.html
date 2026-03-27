@@ -4,6 +4,10 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -189,8 +193,24 @@
     }
     function loadSession() {
       try {
-        var raw = localStorage.getItem('dcac_user');
-        return raw ? JSON.parse(raw) : null;
+        var sessionJSON = localStorage.getItem('dcac_user');
+        if (sessionJSON) {
+          try {
+            var SESSION = JSON.parse(sessionJSON);
+            if (!SESSION.appVersion || SESSION.appVersion < 2) throw new Error('Force upgrade cache purge');
+            var now = new Date().getTime();
+            // 12 hours max
+            if (now - SESSION.loginTime > 12 * 60 * 60 * 1000) {
+              localStorage.removeItem('dcac_user');
+              return null;
+            }
+            return SESSION;
+          } catch(e) {
+            localStorage.removeItem('dcac_user'); // Clear potentially corrupt/old session
+            return null;
+          }
+        }
+        return null;
       } catch(e) { return null; }
     }
     function clearSession() {
