@@ -88,15 +88,17 @@
     .resizer:hover { background: rgba(59,130,246,0.5) }
     @media print {
       @page { size: landscape; margin: 5mm }
-      body { background: #fff !important; color: #000 !important }
-      #login-view, .topbar, .search-bar, .table-title, .no-print { display: none !important }
-      .table-wrap { max-height: none !important; overflow: visible !important; width: 100% !important }
-      .table-card { border: none !important; border-radius: 0 !important; background: white !important }
-      table { font-size: 7px !important; white-space: nowrap !important; width: 100% !important; border-collapse: collapse !important }
-      th { background: #1e3a5f !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 4px 6px !important; border: 0.5px solid #1e3a5f !important }
-      td { padding: 3px 4px !important; border-bottom: 0.5px solid #ccc !important; color: #000 !important }
-      td:first-child, th:first-child { position: static !important; box-shadow: none !important; min-width: 150px !important; max-width: 300px !important; white-space: normal !important; text-align: left !important }
-      .pdf-hide { display: none !important }
+      body { background: #0f172a !important; color: #f1f5f9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      #login-view, .topbar, .search-bar, .table-title, .brand, .no-print { display: none !important; }
+      .container { padding: 0 !important; margin: 0 !important; max-width: none !important; width: 100% !important; }
+      .table-wrap { max-height: none !important; overflow: visible !important; width: 100% !important; border: none !important; background: #0f172a !important; }
+      .table-card { border: none !important; border-radius: 0 !important; background: #0f172a !important; box-shadow: none !important; }
+      table { font-size: 10px !important; white-space: nowrap !important; width: 1200px !important; min-width: 1200px !important; border-collapse: collapse !important; table-layout: fixed !important; }
+      th { background: #1e293b !important; color: #94a3b8 !important; padding: 6px 8px !important; border-bottom: 2px solid #334155 !important; position: static !important; }
+      td { background: #0f172a !important; color: #cbd5e1 !important; padding: 6px 8px !important; border-bottom: 1px solid rgba(51,65,85,.4) !important; position: static !important; }
+      td:first-child, th:first-child { box-shadow: none !important; border-right: 1px solid #334155 !important; width: 220px !important; min-width: 220px !important; max-width: 220px !important; white-space: normal !important; text-align: left !important; position: static !important; }
+      .pdf-hide { display: none !important; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
     .hide-mobile { display: inline; }
     @media screen and (max-width: 768px) {
