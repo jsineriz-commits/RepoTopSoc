@@ -31,11 +31,17 @@
     .login-error { color: #f87171; font-size: 13px; text-align: center; margin-top: 16px; min-height: 20px }
     .topbar { background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(51, 65, 85, 0.5); height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 9999; box-shadow: 0 4px 20px rgba(0,0,0,0.3) }
     .topbar-left { display: flex; align-items: center; gap: 10px }
-    .topbar-left .icon { width: 32px; height: 32px; background: linear-gradient(135deg,#3b82f6,#06b6d4); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px }
+    .topbar-left .icon { width: 32px; height: 32px; background: linear-gradient(135deg,#3b82f6,#06b6d4); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff }
     .topbar-left h1 { font-size: 16px; font-weight: 600; color: #f1f5f9 }
-    .topbar-center { font-size: 18px; font-weight: 700; color: #f1f5f9 }
-    .topbar-center span { color: #3b82f6 }
-    .topbar-right { display: flex; align-items: center; gap: 10px }
+    
+    .brand-dcac { font-family: Georgia, 'Times New Roman', serif; font-size: 26px; font-weight: 700; color: #347bb4; letter-spacing: -0.5px; line-height: 1; display:flex; flex-direction:column; align-items:flex-end; }
+    .brand-dcac-login { align-items: center; margin-bottom: 16px; font-size: 36px; }
+    .brand-dcac .text-core { display: inline-block; }
+    .brand-dcac .aText { font-size: 1.1em; color: #a0d8f1; font-style: italic; font-weight: 700; margin: 0 1px; }
+    .brand-dcac .sub { display: block; font-family: 'Inter', sans-serif; color: #7a7a7a; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+    .brand-dcac-login .sub { font-size: 13px; margin-top: 6px; }
+
+    .topbar-right { display: flex; align-items: center; gap: 12px }
     .user-chip { background: #0f172a; border: 1px solid #334155; border-radius: 20px; padding: 6px 14px 6px 10px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #94a3b8 }
     .user-chip .avatar { width: 24px; height: 24px; background: linear-gradient(135deg,#3b82f6,#06b6d4); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 700 }
     .btn-logout { background: none; border: 1px solid #334155; color: #94a3b8; padding: 6px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all .2s }
@@ -59,8 +65,8 @@
     .search-bar input { width: 100%; padding: 12px 20px; background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(51, 65, 85, 0.8); border-radius: 12px; color: #f1f5f9; font-size: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s; height: 44px; }
     .search-bar input:focus { border-color: #3b82f6; background: rgba(30, 41, 59, 0.9); box-shadow: 0 8px 25px rgba(59,130,246,.2) }
     .status-info { display: flex; align-items: center; gap: 12px; background: rgba(30, 41, 59, 0.4); padding: 0 16px; border-radius: 12px; border: 1px solid rgba(51, 65, 85, 0.5); backdrop-filter: blur(8px); height: 44px; }
-    .table-card { background: #1e293b; border: 1px solid #334155; border-radius: 14px; overflow: hidden }
-    .table-wrap { overflow: auto; max-height: calc(100vh - 160px); position: relative; background: #0f172a }
+    .table-card { background: #1e293b; border: 1px solid #334155; border-radius: 14px; overflow: hidden; transform: translateZ(0); }
+    .table-wrap { overflow: auto; max-height: calc(100vh - 160px); position: relative; background: #0f172a; -webkit-overflow-scrolling: touch; will-change: transform; transform: translateZ(0); }
     table { width: 100%; border-collapse: separate; border-spacing: 0; white-space: nowrap }
     th { position: sticky; top: 0; z-index: 80; text-align: center; padding: 10px 12px; background: #1e293b !important; color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #334155; box-shadow: 0 2px 5px rgba(0,0,0,0.4) }
     td:first-child { position: sticky; left: 0; z-index: 60; background: #0f172a !important; min-width: 220px; max-width: 350px; white-space: normal; box-shadow: 4px 0 10px rgba(0,0,0,0.4); border-right: 1px solid #334155; text-align: center }
@@ -92,10 +98,12 @@
       td:first-child, th:first-child { position: static !important; box-shadow: none !important; min-width: 150px !important; max-width: 300px !important; white-space: normal !important; text-align: left !important }
       .pdf-hide { display: none !important }
     }
-    @media (max-width: 768px) {
+    .hide-mobile { display: inline; }
+    @media screen and (max-width: 768px) {
       .container { padding: 8px 10px; max-width: 100%; width: 100%; }
       .login-card { padding: 32px 24px; width: 92%; }
       .brand-name { font-size: 20px; }
+      .hide-mobile { display: none !important; }
       .topbar { flex-wrap: wrap; height: auto; min-height: 60px; padding: 12px 14px; gap: 10px; justify-content: center; }
       .topbar-center { display: none; }
       .topbar-left { width: 100%; justify-content: center; margin-bottom: 4px; }
@@ -107,14 +115,17 @@
       #btnRefresh::after { content: ' Sync'; font-size: 12px; margin-left: 4px; }
       .ac-selector { margin-left: 0; flex: 1; }
       .ac-dropdown { width: 100%; min-width: 130px; }
-      .search-and-status { flex-direction: column; align-items: stretch; gap: 10px; margin-top: 8px; margin-bottom: 12px; }
-      .status-info { justify-content: space-between; }
-      .search-bar { margin-top: 0; margin-bottom: 0; }
+      .search-and-status { flex-direction: row; align-items: center; gap: 8px; margin-top: 8px; margin-bottom: 12px; flex-wrap: nowrap; }
+      .status-info { justify-content: flex-end; padding: 0 10px; gap: 4px; flex-shrink: 0; }
+      .search-bar { margin-top: 0; margin-bottom: 0; flex-shrink: 1; min-width: 0; }
       .search-bar input { padding: 10px 14px; font-size: 13px; border-radius: 12px; height: 38px; }
       th { padding: 10px 8px; font-size: 10px; }
       td { padding: 10px 8px; font-size: 12px; }
-      td:first-child, th:first-child { min-width: 120px; max-width: 140px; white-space: normal; word-break: break-word; font-size: 11px; }
-      .data-badge { font-size: 9px; padding: 2px 6px; }
+      td:first-child, th:first-child { min-width: 120px; max-width: 140px; white-space: normal; word-break: break-word; font-size: 11px; box-shadow: 2px 0 5px rgba(0,0,0,0.3); border-right: 1px solid rgba(51, 65, 85, 0.5); }
+      .data-badge { font-size: 12px; padding: 4px 6px; background: transparent !important; border: none !important; margin: 0; }
+      .data-badge.import::before { content: '✅ '; }
+      .data-badge.fresh::before { content: '🔄 '; }
+      .data-badge.loading::before { content: '⏳ '; }
       .empty-state { padding: 40px 10px; }
     }
   </style>
@@ -125,8 +136,10 @@
   <div id="login-view">
     <div class="login-card">
       <div class="brand">
-        <div class="brand-name">de<span>Campo</span>a<span>Campo</span></div>
-        <div class="brand-sub">Mercado Ganadero</div>
+        <div class="brand-dcac brand-dcac-login">
+          <div class="text-core">deCampo<span class="aText">a</span>Campo</div>
+          <div class="sub">Mercado Ganadero</div>
+        </div>
         <div class="divider"></div>
       </div>
       <form id="loginForm">
@@ -143,10 +156,15 @@
     <div class="pdf-guide-marker no-print"></div>
     <div class="topbar no-print">
       <div class="topbar-left">
-        <div class="icon">📊</div>
+        <div class="icon">
+          <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+        </div>
         <h1>TOP Sociedades</h1>
       </div>
-      <div class="topbar-center">de<span>Campo</span>a<span>Campo</span></div>
+      <div class="topbar-center brand-dcac">
+        <div class="text-core">deCampo<span class="aText">a</span>Campo</div>
+        <div class="sub">Mercado Ganadero</div>
+      </div>
       <div class="topbar-right">
         <div id="adminControls" class="ac-selector">
           <div class="ac-dropdown">
@@ -433,7 +451,7 @@
     function fetchData(uid) {
       currentUid = uid;
       clearTable();
-      setStatus('loading', '⏳ Cargando...');
+      setStatus('loading', '<span class="hide-mobile">⏳ Cargando...</span>');
       document.getElementById('spinner').style.display = 'block';
 
       apiFetch('/api/getDashboardData?userId=' + encodeURIComponent(uid))
@@ -446,7 +464,7 @@
             allRows = res.d;
             renderTable(allHeaders, allRows);
             var ts = res.importTime ? ' — ' + formatImportTime(res.importTime) : '';
-            setStatus('import', '✅ Datos del día' + ts);
+            setStatus('import', '<span class="hide-mobile">✅ Datos del día' + ts + '</span>');
           } else {
             document.getElementById('tBody').innerHTML =
               '<tr><td colspan="100" class="empty-state">⚠️ ' + (res ? res.error : 'Sin respuesta') + '</td></tr>';
@@ -468,7 +486,7 @@
       var btn = document.getElementById('btnRefresh');
       btn.disabled = true;
       btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Actualizando...';
-      setStatus('loading', '⏳ Consultando Metabase...');
+      setStatus('loading', '<span class="hide-mobile">⏳ Consultando Metabase...</span>');
       document.getElementById('spinner').style.display = 'block';
 
       apiFetch('/api/refreshUserFromMetabase', {
@@ -484,7 +502,7 @@
           buildHIdx(allHeaders);
           allRows    = res.d;
           renderTable(allHeaders, allRows);
-          setStatus('fresh', '🔄 Actualizado ahora desde Metabase');
+          setStatus('fresh', '<span class="hide-mobile">🔄 Actualizado ahora desde Metabase</span>');
         } else {
           setStatus('loading', '⚠️ Error: ' + res.error);
         }
@@ -564,7 +582,7 @@
       if (!text) { badge.style.display = 'none'; return; }
       badge.style.display = 'inline-block';
       badge.className     = 'data-badge ' + type;
-      badge.textContent   = text;
+      badge.innerHTML     = text;
     }
 
     function clearTable() {
@@ -579,7 +597,7 @@
       var headEl = document.getElementById('tHead');
       var bodyEl = document.getElementById('tBody');
       headEl.innerHTML = ''; bodyEl.innerHTML = '';
-      document.getElementById('rowCount').textContent = rows.length + ' Sociedades';
+      document.getElementById('rowCount').innerHTML = rows.length + '<span class="hide-mobile"> Sociedades</span>';
 
       if (rows.length === 0) {
         bodyEl.innerHTML = '<tr><td colspan="100" class="empty-state">Sin datos para este usuario.</td></tr>';
