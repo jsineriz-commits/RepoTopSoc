@@ -6,7 +6,7 @@
 //   METABASE_PASSWORD   — contraseña
 //   METABASE_QUESTION_ID — (opcional) ID de la question, default 64
 
-const QUESTION_ID = process.env.METABASE_QUESTION_ID || '64';
+const QUESTION_ID = process.env.METABASE_QUESTION_ID || '145';
 
 /**
  * Autentica en Metabase y devuelve { id, baseUrl }.
@@ -51,7 +51,17 @@ async function fetchMetabaseToken() {
  */
 async function fetchMetabaseRows(userId, tokenData) {
   const params = new URLSearchParams();
-  params.append('parameters', '[]');
+  
+  let metaParams = [];
+  if (userId && userId !== '0') {
+    metaParams.push({
+      type: "category",
+      target: ["variable", ["template-tag", "id_usuario"]],
+      value: String(userId)
+    });
+  }
+  
+  params.append('parameters', JSON.stringify(metaParams));
 
   const res = await fetch(tokenData.baseUrl + `api/card/${QUESTION_ID}/query/json`, {
     method:  'POST',
