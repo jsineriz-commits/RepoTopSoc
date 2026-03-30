@@ -53,7 +53,6 @@ async function fetchMetabaseRows(userId, tokenData) {
   const params = new URLSearchParams();
   
   let metaParams = [];
-  let currentQuestionId = '145'; // Updated query for individual user
   
   if (userId && String(userId) !== '0') {
     // Clean userId to remove commas/dots (e.g. 117,393 -> 117393)
@@ -63,14 +62,11 @@ async function fetchMetabaseRows(userId, tokenData) {
       target: ["variable", ["template-tag", "id_usuario"]],
       value: cleanUserId
     });
-  } else {
-    // Si es admin (0) o vacío, usamos la query original 64 para traer todo sin timeout
-    currentQuestionId = process.env.METABASE_QUESTION_ID_GLOBAL || '64';
   }
   
   params.append('parameters', JSON.stringify(metaParams));
 
-  const res = await fetch(tokenData.baseUrl + `api/card/${currentQuestionId}/query/json`, {
+  const res = await fetch(tokenData.baseUrl + `api/card/${QUESTION_ID}/query/json`, {
     method:  'POST',
     headers: {
       'Content-Type':        'application/x-www-form-urlencoded',
