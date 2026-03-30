@@ -237,6 +237,8 @@ function buildColumnMap(hMap) {
     fecha_creacion:        find(['fecha_creacion', 'created_at', 'f_crea']),
     ult_ingreso:           find(['ult_ingreso', 'last_login', 'u_ing']),
     fuc:                   find(['fuc', 'ultima_compra', 'ucom']),
+    partido_domicilio_est: find(['partido_domicilio_est', 'partido', 'domicilio_est']),
+    provincia:             find(['provincia']),
   };
 }
 
