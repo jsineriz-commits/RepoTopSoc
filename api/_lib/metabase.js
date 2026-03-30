@@ -74,7 +74,8 @@ async function fetchMetabaseRows(userId, tokenData) {
   });
 
   if (!res.ok) {
-    throw new Error(`Metabase JSON Export error (${res.status})`);
+    const errorBody = await res.text();
+    throw new Error(`Metabase JSON Export error (${res.status}): ${errorBody}`);
   }
 
   let jsonArray;
