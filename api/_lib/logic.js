@@ -556,7 +556,9 @@ function _relTime(dateStr, nowTs) {
   if (!dateStr || dateStr === '-' || dateStr === '0000-01-01' || dateStr === 'null') return '';
   try {
     const ts = (dateStr instanceof Date) ? dateStr.getTime() : new Date(dateStr).getTime();
-    if (isNaN(ts)) return '';
+    // Fechas inválidas o fechas "dummy" de db (ej. 1900-01-01, 1970-01-01) que generan 5a+
+    if (isNaN(ts) || ts < 946684800000) return ''; 
+    
     const d = Math.floor((nowTs - ts) / 86400000);
     if (d < 1)  return 'hoy';
     if (d < 30) return d + 'd';
