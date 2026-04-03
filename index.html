@@ -729,6 +729,26 @@
             td.textContent = txt;
           }
 
+          if (h === 'FUC' || h === 'FUAct' || h === 'FUOp' || h === 'FUV (F)' || h === 'FUV (I)') {
+            if (txt && txt !== '') {
+              var sVal = String(txt).toLowerCase();
+              if (sVal === 'hoy' || sVal === '0d') {
+                td.style.backgroundColor = 'rgba(74, 222, 128, 0.15)';
+                td.style.color = '#4ade80';
+                td.style.fontWeight = '700';
+              } else if (sVal.indexOf('d') !== -1) {
+                td.style.color = '#4ade80';
+                td.style.fontWeight = '700';
+              } else if (sVal.indexOf('m') !== -1) {
+                td.style.color = '#fb923c';
+                td.style.fontWeight = '700';
+              } else if (sVal.indexOf('a') !== -1) {
+                td.style.color = '#f87171';
+                td.style.fontWeight = '700';
+              }
+            }
+          }
+
           if (h === 'estab_ppal') {
             td.style.maxWidth = 'var(--col-estab-w)';
             td.style.overflow = 'hidden';
